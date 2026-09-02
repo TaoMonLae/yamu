@@ -17,6 +17,7 @@ The default logo and favicon use the Yamu Mon mark in `public/yamu-logo.png` and
 - Import `.csv`, `.xls`, and `.xlsx` files through the admin page
 - Add, edit, delete, approve, reject, and export catalog records
 - Customize the site name, tagline, accent color, header logo, and favicon
+- Install Yamu as a PWA with platform icons and an offline connection screen
 - Keep SQLite and `data/names.json` synchronized after catalog changes
 
 ## Requirements
@@ -41,6 +42,8 @@ Open these pages:
 - Admin: <http://localhost:3002/admin>
 
 The development admin password is `change-me`. Change it before sharing or deploying the app.
+
+Service-worker registration is enabled only in production. After running `npm run build` and `npm start`, supported browsers can install Yamu from `localhost` or an HTTPS deployment. Public pages use network-first caching, while admin and API requests are never cached.
 
 ## Environment variables
 

@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { BrandingProvider } from "@/components/BrandingProvider";
 import { BlinkingSquares } from "@/components/reactbits/BlinkingSquares";
+import { PwaRegistration } from "@/components/PwaRegistration";
 import { brandThemeStyle } from "@/lib/brand-theme";
 import { getBrandSettings } from "@/lib/branding";
 import "./globals.css";
@@ -30,11 +31,32 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const branding = getBrandSettings();
   return {
+    applicationName: branding.siteName,
     title: {
       default: `${branding.siteName} | Names across Mon, Burmese, and English`,
       template: `%s | ${branding.siteName}`,
     },
     description: `${branding.siteName} lets you compare Mon, Burmese, and English name spellings, choose a preferred variant, and export a typographic PNG specimen.`,
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: branding.siteName,
+    },
+    icons: {
+      apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    },
+  };
+}
+
+export async function generateViewport(): Promise<Viewport> {
+  const branding = getBrandSettings();
+  return {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+    colorScheme: "light dark",
+    themeColor: branding.accentColor,
   };
 }
 
@@ -62,6 +84,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-full bg-canvas text-ink">
+        <PwaRegistration />
         <BrandingProvider initialBranding={branding}>
           <BlinkingSquares />
           <div className="app-layer">{children}</div>

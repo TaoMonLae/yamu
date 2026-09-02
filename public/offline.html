@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff4f1f" />
+    <title>YAMU — Offline</title>
+    <style>
+      @font-face {
+        font-family: "Yamu Script";
+        src: url("/fonts/Z20-KhitHaungg-Regular.otf") format("opentype");
+        font-display: swap;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body { min-height: 100%; }
+
+      body {
+        margin: 0;
+        background:
+          linear-gradient(to right, transparent calc(50% - .5px), rgba(17, 16, 14, .05) 50%, transparent calc(50% + .5px)),
+          #fafaf6;
+        color: #11100e;
+        font: 14px/1.5 "Helvetica Neue", Arial, sans-serif;
+      }
+
+      header {
+        min-height: 72px;
+        border-bottom: 1px solid #11100e;
+      }
+
+      .shell {
+        width: min(100% - 32px, 1240px);
+        margin: 0 auto;
+      }
+
+      .brand {
+        display: flex;
+        min-height: 72px;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand img {
+        width: 34px;
+        height: 34px;
+        border: 1px solid #c7c3b8;
+        object-fit: contain;
+      }
+
+      .wordmark {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -.01em;
+      }
+
+      .script {
+        margin: 3px 0 0;
+        color: #706d65;
+        font: 11px "Yamu Script", sans-serif;
+      }
+
+      main {
+        display: grid;
+        min-height: calc(100vh - 72px);
+        place-items: center;
+        padding: 32px 0;
+      }
+
+      .notice {
+        display: grid;
+        width: min(100%, 760px);
+        border: 1px solid #11100e;
+        background: #fff;
+        grid-template-columns: minmax(120px, 28%) 1fr;
+      }
+
+      .index {
+        padding: 32px;
+        background: #11100e;
+        color: #fafaf6;
+      }
+
+      .index p {
+        margin: 0;
+        color: #c7c3b8;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+      }
+
+      .index strong {
+        display: block;
+        margin-top: 18px;
+        color: #ff4f1f;
+        font-size: 48px;
+        line-height: 1;
+      }
+
+      .copy { padding: 42px; }
+
+      h1 {
+        max-width: 12ch;
+        margin: 0;
+        font-size: clamp(32px, 6vw, 58px);
+        line-height: .98;
+        letter-spacing: -.04em;
+      }
+
+      .copy p {
+        max-width: 48ch;
+        margin: 24px 0 30px;
+        color: #5f5c55;
+        font-size: 16px;
+      }
+
+      button {
+        min-height: 48px;
+        border: 1px solid #11100e;
+        border-radius: 2px;
+        padding: 0 22px;
+        background: #ff4f1f;
+        color: #11100e;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+
+      button:hover { background: #dc3710; }
+
+      @media (max-width: 620px) {
+        .notice { grid-template-columns: 1fr; }
+        .index { padding: 22px 26px; }
+        .index strong { margin-top: 8px; font-size: 32px; }
+        .copy { padding: 34px 26px; }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background:
+            linear-gradient(to right, transparent calc(50% - .5px), rgba(242, 239, 231, .05) 50%, transparent calc(50% + .5px)),
+            #10100f;
+          color: #f2efe7;
+        }
+        header, .notice, button { border-color: #f2efe7; }
+        .notice { background: #181816; }
+        .index { background: #f2efe7; color: #11100e; }
+        .index p { color: #5f5c55; }
+        .copy p, .script { color: #aaa69b; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="shell brand">
+        <img src="/yamu-logo.png" alt="" />
+        <div>
+          <p class="wordmark">YAMU</p>
+          <p class="script" lang="mnw">ယၟု / မန် / ဗမာ / English</p>
+        </div>
+      </div>
+    </header>
+    <main class="shell">
+      <section class="notice" aria-labelledby="offline-title">
+        <div class="index">
+          <p>Connection</p>
+          <strong>00</strong>
+        </div>
+        <div class="copy">
+          <h1 id="offline-title">Yamu is waiting for a connection.</h1>
+          <p>The name catalog stays current online. Reconnect, then try again to search names or send a contribution.</p>
+          <button type="button" onclick="window.location.reload()">Try again →</button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
