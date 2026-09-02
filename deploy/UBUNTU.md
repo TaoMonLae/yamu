@@ -18,7 +18,8 @@ sudo npm install -g pm2
 sudo mkdir -p /var/www/mon-name-converter /var/lib/mon-names
 sudo chown "$USER":"$USER" /var/www/mon-name-converter /var/lib/mon-names
 cd /var/www/mon-name-converter
-# copy this repository here
+git clone https://github.com/TaoMonLae/yamu.git yamu
+cd yamu
 cp .env.example .env.local
 # set ADMIN_PASSWORD and ADMIN_SESSION_SECRET
 ```
@@ -26,16 +27,17 @@ cp .env.example .env.local
 ## 3. Build
 
 ```bash
-cd /var/www/mon-name-converter
+cd /var/www/mon-name-converter/yamu
 npm ci
 npm run build
-cp -R public .next/standalone/public
-cp -R .next/static .next/standalone/.next/static
+mkdir -p .next/standalone/public .next/standalone/.next/static
+cp -a public/. .next/standalone/public/
+cp -a .next/static/. .next/standalone/.next/static/
 ```
 
 ## 4. Environment
 
-Create `/var/www/mon-name-converter/.env.local`:
+Create `/var/www/mon-name-converter/yamu/.env.local`:
 
 ```
 ADMIN_PASSWORD=a-long-password
@@ -47,8 +49,11 @@ PORT=3001
 ## 5. Process manager
 
 ```bash
-cd /var/www/mon-name-converter/.next/standalone
-pm2 start server.js --name mon-name-converter --cwd /var/www/mon-name-converter/.next/standalone
+cd /var/www/mon-name-converter/yamu
+set -a
+source .env.local
+set +a
+pm2 start .next/standalone/server.js --name mon-name-converter --cwd /var/www/mon-name-converter/yamu/.next/standalone
 pm2 save
 pm2 startup
 ```
@@ -60,7 +65,7 @@ module.exports = {
   apps: [
     {
       name: "mon-name-converter",
-      cwd: "/var/www/mon-name-converter/.next/standalone",
+      cwd: "/var/www/mon-name-converter/yamu/.next/standalone",
       script: "server.js",
       env: {
         PORT: 3001,
@@ -80,7 +85,7 @@ sudo cp deploy/nginx.conf /etc/nginx/sites-available/mon-name-converter
 sudo ln -s /etc/nginx/sites-available/mon-name-converter /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
-sudo certbot --nginx -d your-domain.com
+sudo certbot --nginx -d yamumon.com -d www.yamumon.com
 ```
 
 ## Backup
