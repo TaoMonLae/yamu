@@ -50,33 +50,12 @@ PORT=3002
 
 ```bash
 cd /var/www/mon-name-converter/yamu
-set -a
-source .env.local
-set +a
-pm2 start .next/standalone/server.js --name mon-name-converter --cwd /var/www/mon-name-converter/yamu/.next/standalone
+pm2 startOrReload deploy/ecosystem.config.cjs --update-env
 pm2 save
 pm2 startup
 ```
 
-The process reads `DATA_DIR` from the environment. If PM2 does not inherit `.env.local`, export the variables in an ecosystem file:
-
-```js
-module.exports = {
-  apps: [
-    {
-      name: "mon-name-converter",
-      cwd: "/var/www/mon-name-converter/yamu/.next/standalone",
-      script: "server.js",
-      env: {
-        PORT: 3002,
-        DATA_DIR: "/var/lib/mon-names",
-        ADMIN_PASSWORD: "a-long-password",
-        ADMIN_SESSION_SECRET: "a-longer-random-string",
-      },
-    },
-  ],
-};
-```
+The PM2 configuration starts Node with `--env-file`, so `.env.local` is parsed as a dotenv file rather than as a Bash script. Passwords and secrets may therefore contain shell punctuation without breaking startup. Do not run `source .env.local`.
 
 ## 6. nginx + TLS
 
