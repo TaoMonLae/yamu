@@ -52,6 +52,8 @@ PORT=3001
 
 `DATA_DIR` is optional. When it is not set, Yamu stores its database and JSON catalog in the repository's `data` directory. Set it to a persistent writable directory in production.
 
+When a new database is created, Yamu initializes it from the repository's portable `data/names.json` catalog. Set `INITIAL_CATALOG_PATH` only when that file lives somewhere else. If no portable catalog is available, Yamu falls back to the small sample seed.
+
 ## Admin workflow
 
 The admin page can import a spreadsheet in append or replace mode. After upload, map the source columns to the Yamu fields and review the rows before committing them.

@@ -48,7 +48,55 @@ type ImportBackupRow = {
   names_json: string;
 };
 
+type PortableName = {
+  mon?: string | string[];
+  burmese?: string | string[];
+  english?: string | string[];
+  notes?: string;
+  credit?: string;
+};
+
 let db: Database.Database | null = null;
+
+function portableCell(value: PortableName["mon"]) {
+  if (Array.isArray(value)) return value.filter((item) => typeof item === "string").join(", ");
+  return typeof value === "string" ? value : "";
+}
+
+function initialCatalog(): NameInput[] {
+  const candidates = [
+    process.env.INITIAL_CATALOG_PATH,
+    path.join(process.cwd(), "data", "names.json"),
+    path.resolve(process.cwd(), "..", "..", "data", "names.json"),
+  ].filter((candidate): candidate is string => Boolean(candidate));
+
+  for (const candidate of [...new Set(candidates)]) {
+    if (!fs.existsSync(candidate)) continue;
+    try {
+      const parsed = JSON.parse(fs.readFileSync(candidate, "utf8")) as unknown;
+      if (!Array.isArray(parsed)) continue;
+      const records = parsed.flatMap((item): NameInput[] => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+        const row = item as PortableName;
+        const mon = portableCell(row.mon);
+        const burmese = portableCell(row.burmese);
+        const english = portableCell(row.english);
+        if (!mon && !burmese && !english) return [];
+        return [{
+          mon,
+          burmese,
+          english,
+          notes: typeof row.notes === "string" ? row.notes : "",
+          credit: typeof row.credit === "string" ? row.credit : "",
+        }];
+      });
+      if (records.length > 0) return records;
+    } catch {
+      // Try the next known catalog location, then fall back to the sample seed.
+    }
+  }
+  return [];
+}
 
 function mapRow(row: NameRow): NameRecord {
   const monVariants = parseVariantCell(row.mon);
@@ -176,10 +224,12 @@ export function getDb() {
 
   const count = db.prepare("SELECT COUNT(*) AS n FROM names").get() as { n: number };
   if (count.n === 0) {
-    insertNames(SEED_NAMES, "seed");
+    const bootstrapRecords = initialCatalog();
+    const records = bootstrapRecords.length > 0 ? bootstrapRecords : SEED_NAMES;
+    insertNames(records, "seed");
     db.prepare(
       "INSERT INTO imports (id, filename, row_count, created_at) VALUES (?, ?, ?, ?)",
-    ).run("seed", "seed.json", SEED_NAMES.length, new Date().toISOString());
+    ).run("seed", bootstrapRecords.length > 0 ? "names.json" : "seed.json", records.length, new Date().toISOString());
     exportNamesJson();
   }
 
