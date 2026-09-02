@@ -6,7 +6,7 @@ module.exports = {
       script: "server.js",
       env: {
         NODE_ENV: "production",
-        PORT: 3001,
+        PORT: 3002,
         DATA_DIR: "/var/lib/mon-names",
       },
     },

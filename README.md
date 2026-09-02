@@ -36,9 +36,9 @@ npm run dev
 
 Open these pages:
 
-- Search: <http://localhost:3001>
-- About: <http://localhost:3001/about>
-- Admin: <http://localhost:3001/admin>
+- Search: <http://localhost:3002>
+- About: <http://localhost:3002/about>
+- Admin: <http://localhost:3002/admin>
 
 The development admin password is `change-me`. Change it before sharing or deploying the app.
 
@@ -47,7 +47,7 @@ The development admin password is `change-me`. Change it before sharing or deplo
 ```dotenv
 ADMIN_PASSWORD=change-me
 ADMIN_SESSION_SECRET=replace-with-a-long-random-string
-PORT=3001
+PORT=3002
 ```
 
 `DATA_DIR` is optional. When it is not set, Yamu stores its database and JSON catalog in the repository's `data` directory. Set it to a persistent writable directory in production.

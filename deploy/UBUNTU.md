@@ -43,7 +43,7 @@ Create `/var/www/mon-name-converter/yamu/.env.local`:
 ADMIN_PASSWORD=a-long-password
 ADMIN_SESSION_SECRET=a-longer-random-string
 DATA_DIR=/var/lib/mon-names
-PORT=3001
+PORT=3002
 ```
 
 ## 5. Process manager
@@ -68,7 +68,7 @@ module.exports = {
       cwd: "/var/www/mon-name-converter/yamu/.next/standalone",
       script: "server.js",
       env: {
-        PORT: 3001,
+        PORT: 3002,
         DATA_DIR: "/var/lib/mon-names",
         ADMIN_PASSWORD: "a-long-password",
         ADMIN_SESSION_SECRET: "a-longer-random-string",
