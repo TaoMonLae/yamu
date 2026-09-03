@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import localFont from "next/font/local";
 import { BrandingProvider } from "@/components/BrandingProvider";
 import { BlinkingSquares } from "@/components/reactbits/BlinkingSquares";
@@ -67,6 +68,7 @@ export default async function RootLayout({
 }>) {
   const branding = getBrandSettings();
   const themeStyle = brandThemeStyle(branding.accentColor) as CSSProperties;
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <html
@@ -78,6 +80,7 @@ export default async function RootLayout({
       <head>
         {branding.faviconUrl ? <link data-brand-favicon="true" rel="icon" href={branding.faviconUrl} /> : null}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('yamu-theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}})()`,
           }}

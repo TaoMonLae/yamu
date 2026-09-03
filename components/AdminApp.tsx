@@ -111,11 +111,12 @@ export function AdminApp() {
     setAuthError("");
     const response = await fetch("/api/admin/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
       body: JSON.stringify({ password }),
     });
     if (!response.ok) {
-      setAuthError("That password does not match the admin key.");
+      const data = (await response.json()) as { error?: string };
+      setAuthError(data.error || "That password does not match the admin key.");
       return;
     }
     setPassword("");
@@ -123,7 +124,7 @@ export function AdminApp() {
   }
 
   async function onLogout() {
-    await fetch("/api/admin/logout", { method: "POST" });
+    await fetch("/api/admin/logout", { method: "POST", headers: { "X-Yamu-Request": "1" } });
     setAuthed(false);
   }
 
@@ -133,7 +134,11 @@ export function AdminApp() {
     setMessage("");
     const body = new FormData();
     body.append("file", next);
-    const response = await fetch("/api/admin/import/parse", { method: "POST", body });
+    const response = await fetch("/api/admin/import/parse", {
+      method: "POST",
+      headers: { "X-Yamu-Request": "1" },
+      body,
+    });
     const data = (await response.json()) as {
       error?: string;
       filename?: string;
@@ -159,7 +164,7 @@ export function AdminApp() {
     setError("");
     const response = await fetch("/api/admin/import/commit", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
       body: JSON.stringify({ filename, rows, mapping, mode }),
     });
     const data = (await response.json()) as { error?: string; imported?: number; total?: number };
@@ -178,7 +183,10 @@ export function AdminApp() {
     if (!window.confirm("Undo the most recent import and rewrite the live JSON catalog?")) return;
     setBusy(true);
     setError("");
-    const response = await fetch("/api/admin/import/undo", { method: "POST" });
+    const response = await fetch("/api/admin/import/undo", {
+      method: "POST",
+      headers: { "X-Yamu-Request": "1" },
+    });
     const data = (await response.json()) as { error?: string; deleted?: number; restored?: number };
     setBusy(false);
     if (!response.ok) {
@@ -214,7 +222,7 @@ export function AdminApp() {
     try {
       const response = await fetch(`/api/admin/names/${editing.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
         body: JSON.stringify(editing),
       });
       const data = (await response.json()) as { error?: string; result?: NameRecord };
@@ -239,7 +247,10 @@ export function AdminApp() {
     setCatalogError("");
     setCatalogMessage("");
     try {
-      const response = await fetch(`/api/admin/names/${row.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/admin/names/${row.id}`, {
+        method: "DELETE",
+        headers: { "X-Yamu-Request": "1" },
+      });
       const data = (await response.json()) as { error?: string; count?: number };
       if (!response.ok) {
         setCatalogError(data.error || `Could not delete “${label}”.`);
@@ -262,7 +273,7 @@ export function AdminApp() {
     setManualMessage("");
     const response = await fetch("/api/admin/names", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
       body: JSON.stringify(manualName),
     });
     const data = (await response.json()) as { error?: string; count?: number; result?: NameRecord };
@@ -294,7 +305,7 @@ export function AdminApp() {
     setError("");
     const response = await fetch(`/api/admin/suggestions/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
       body: JSON.stringify({ action: "reject" }),
     });
     const data = (await response.json()) as { error?: string };
@@ -309,7 +320,7 @@ export function AdminApp() {
     setError("");
     const response = await fetch(`/api/admin/suggestions/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
       body: JSON.stringify({ action: "resolve" }),
     });
     const data = (await response.json()) as { error?: string };
@@ -328,7 +339,7 @@ export function AdminApp() {
     setError("");
     const response = await fetch(`/api/admin/suggestions/${reviewing.suggestion.id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
       body: JSON.stringify({
         action: "approve",
         name: {

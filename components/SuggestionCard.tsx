@@ -60,7 +60,7 @@ export function SuggestionCard({ query, missingTokens, initialSource, lang, onCa
     try {
       const response = await fetch("/api/suggestions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
         body: JSON.stringify({ kind: "word", text, source, spellings: { ...spellings, [source]: text }, context, note, contributorName }),
       });
       const data = (await response.json()) as { error?: string };

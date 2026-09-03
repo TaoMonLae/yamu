@@ -54,10 +54,14 @@ Service-worker registration is enabled only in production. After running `npm ru
 ```dotenv
 ADMIN_PASSWORD=change-me
 ADMIN_SESSION_SECRET=replace-with-a-long-random-string
+APP_ORIGINS=http://localhost:3002
+# TRUST_CLOUDFLARE_PROXY=true
 PORT=3002
 ```
 
 `DATA_DIR` is optional. When it is not set, Yamu stores its database and JSON catalog in the repository's `data` directory. Set it to a persistent writable directory in production.
+
+In production, `ADMIN_PASSWORD` must be at least 12 characters and `ADMIN_SESSION_SECRET` must be a separate value of at least 32 bytes. Set `APP_ORIGINS` to the exact public HTTPS origins, separated by commas when needed. For this deployment, use `https://yamumon.com,https://www.yamumon.com`. Set `TRUST_CLOUDFLARE_PROXY=true` only when direct access to the origin is blocked; this lets rate limits use Cloudflare's authenticated visitor-IP header.
 
 When a new database is created, Yamu initializes it from the repository's portable `data/names.json` catalog. Set `INITIAL_CATALOG_PATH` only when that file lives somewhere else. If no portable catalog is available, Yamu falls back to the small sample seed.
 
@@ -127,6 +131,12 @@ npm run import:myanmar-names   # Import the fallback Myanmar name source
 The app builds as a standalone Next.js server and stores its catalog on disk. The included guide covers Node.js, PM2, nginx, TLS, persistent data, and backups on Ubuntu.
 
 See [\`deploy/UBUNTU.md\`](deploy/UBUNTU.md) for the full deployment steps.
+
+## Security
+
+Yamu limits request and upload sizes, throttles admin login attempts and public contributions, validates state-changing browser requests, uses signed `HttpOnly` admin sessions, and sends a nonce-based Content Security Policy with additional browser hardening headers. The production process binds to `127.0.0.1`; expose it through nginx or Cloudflare Tunnel instead of opening port 3002 publicly.
+
+Run `npm audit` after dependency updates. Edge rate limiting in Cloudflare is still recommended because the built-in limiter is per Node process and is intended as a second layer of protection.
 
 ## License
 

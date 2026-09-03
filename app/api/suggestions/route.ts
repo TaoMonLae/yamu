@@ -2,10 +2,22 @@ import { NextResponse } from "next/server";
 import { createSuggestion } from "@/lib/db";
 import { readJsonObject } from "@/lib/http";
 import type { Language, SuggestionKind } from "@/lib/types";
+import { takeRateLimit } from "@/lib/rate-limit";
+import { clientIp, isTrustedMutation } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  if (!isTrustedMutation(request)) {
+    return NextResponse.json({ error: "Request rejected." }, { status: 403 });
+  }
+  const rate = takeRateLimit(`suggestion:${clientIp(request)}`, 12, 60 * 60 * 1_000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "You have sent several contributions. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rate.retryAfter) } },
+    );
+  }
   const body = await readJsonObject<{
     text?: string;
     kind?: SuggestionKind;
@@ -14,7 +26,7 @@ export async function POST(request: Request) {
     note?: string;
     contributorName?: string;
     spellings?: Partial<Record<Language, string>>;
-  }>(request);
+  }>(request, 8 * 1024);
   if (!body) {
     return NextResponse.json({ error: "Send a valid suggestion." }, { status: 400 });
   }

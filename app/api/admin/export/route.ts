@@ -4,6 +4,15 @@ import { listNames } from "@/lib/db";
 
 export const runtime = "nodejs";
 
+function escapeCsvCell(value: string) {
+  const protectedValue = /^[=+\-@＝＋－＠]/u.test(value)
+    ? `\t${value}`
+    : /^[\t\r\n]/u.test(value)
+      ? `'${value}`
+      : value;
+  return `"${protectedValue.replaceAll('"', '""')}"`;
+}
+
 export async function GET(request: Request) {
   if (!(await isAuthed())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -24,7 +33,7 @@ export async function GET(request: Request) {
           row.notes,
           row.credit,
         ]
-          .map((value) => `"${value.replaceAll('"', '""')}"`)
+          .map(escapeCsvCell)
           .join(","),
       )
       .join("\n");

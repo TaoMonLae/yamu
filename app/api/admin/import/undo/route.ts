@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/auth";
 import { undoLastImport } from "@/lib/db";
+import { isTrustedMutation } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (!isTrustedMutation(request)) {
+    return NextResponse.json({ error: "Request rejected." }, { status: 403 });
+  }
   if (!(await isAuthed())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }

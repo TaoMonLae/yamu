@@ -5,10 +5,14 @@ import { appendNames, countNames, exportNamesJson, replaceAllNames } from "@/lib
 import { applyColumnMap } from "@/lib/import";
 import { readJsonObject } from "@/lib/http";
 import type { ColumnMap } from "@/lib/types";
+import { isTrustedMutation } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  if (!isTrustedMutation(request)) {
+    return NextResponse.json({ error: "Request rejected." }, { status: 403 });
+  }
   if (!(await isAuthed())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
@@ -18,9 +22,17 @@ export async function POST(request: Request) {
     rows?: Record<string, string>[];
     mapping?: ColumnMap;
     mode?: "append" | "replace";
-  }>(request);
+  }>(request, 20 * 1024 * 1024);
 
-  if (!body || !Array.isArray(body.rows) || !body.mapping || typeof body.mapping !== "object" || Array.isArray(body.mapping)) {
+  if (
+    !body
+    || !Array.isArray(body.rows)
+    || body.rows.some((row) => !row || typeof row !== "object" || Array.isArray(row))
+    || !body.mapping
+    || typeof body.mapping !== "object"
+    || Array.isArray(body.mapping)
+    || (body.mode !== undefined && body.mode !== "append" && body.mode !== "replace")
+  ) {
     return NextResponse.json({ error: "Send valid spreadsheet rows and a column mapping." }, { status: 400 });
   }
   if (body.rows.length > 50_000) {
@@ -33,7 +45,9 @@ export async function POST(request: Request) {
   }
 
   const batchId = randomUUID();
-  const filename = body.filename || "upload";
+  const filename = typeof body.filename === "string"
+    ? body.filename.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 200) || "upload"
+    : "upload";
   if (body.mode === "replace") {
     replaceAllNames(records, batchId, filename);
   } else {

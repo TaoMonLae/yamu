@@ -149,7 +149,11 @@ export function BrandSettings() {
     if (favicon) form.set("favicon", favicon);
 
     try {
-      const response = await fetch("/api/admin/settings", { method: "POST", body: form });
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "X-Yamu-Request": "1" },
+        body: form,
+      });
       const data = (await response.json()) as { settings?: BrandSettings; error?: string };
       if (!response.ok || !data.settings) throw new Error(data.error || "Could not save branding settings.");
       setBranding(data.settings);

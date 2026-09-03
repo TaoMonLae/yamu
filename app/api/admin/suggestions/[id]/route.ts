@@ -3,6 +3,7 @@ import { isAuthed } from "@/lib/auth";
 import { approveSuggestion, rejectSuggestion, resolveSuggestion } from "@/lib/db";
 import { readJsonObject } from "@/lib/http";
 import { validateNameInput } from "@/lib/name-input";
+import { isTrustedMutation } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
@@ -10,12 +11,15 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  if (!isTrustedMutation(request)) {
+    return NextResponse.json({ error: "Request rejected." }, { status: 403 });
+  }
   if (!(await isAuthed())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const { id } = await context.params;
   const suggestionId = Number(id);
-  if (!Number.isInteger(suggestionId)) {
+  if (!Number.isSafeInteger(suggestionId) || suggestionId <= 0) {
     return NextResponse.json({ error: "Invalid suggestion." }, { status: 400 });
   }
 

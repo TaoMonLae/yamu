@@ -1,15 +1,28 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
-const COOKIE = "admin_session";
-const MAX_AGE = 60 * 60 * 24 * 7;
+const MAX_AGE = 60 * 60 * 12;
+
+function cookieName() {
+  return process.env.NODE_ENV === "production"
+    ? "__Host-yamu_admin_session"
+    : "yamu_admin_session";
+}
 
 function secret() {
-  return (
-    process.env.ADMIN_SESSION_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    "dev-only-change-me"
-  );
+  const value = process.env.ADMIN_SESSION_SECRET?.trim();
+  if (process.env.NODE_ENV === "production") {
+    if (
+      !value
+      || Buffer.byteLength(value) < 32
+      || value === process.env.ADMIN_PASSWORD
+      || value === "replace-with-a-long-random-string"
+    ) {
+      throw new Error("ADMIN_SESSION_SECRET must be unique and at least 32 bytes in production.");
+    }
+    return value;
+  }
+  return value || "dev-only-change-me";
 }
 
 function sign(value: string) {
@@ -17,7 +30,14 @@ function sign(value: string) {
 }
 
 export function adminPassword() {
-  return process.env.ADMIN_PASSWORD || "change-me";
+  const value = process.env.ADMIN_PASSWORD ?? "";
+  if (process.env.NODE_ENV === "production") {
+    if (value.length < 12 || value === "change-me") {
+      throw new Error("ADMIN_PASSWORD must be at least 12 characters in production.");
+    }
+    return value;
+  }
+  return value || "change-me";
 }
 
 export function passwordsMatch(input: string, expected: string) {
@@ -33,33 +53,42 @@ export function passwordsMatch(input: string, expected: string) {
 
 export async function createSession() {
   const exp = Date.now() + MAX_AGE * 1000;
-  const nonce = randomBytes(8).toString("hex");
+  const nonce = randomBytes(16).toString("hex");
   const payload = `${exp}.${nonce}`;
   const token = `${payload}.${sign(payload)}`;
   const jar = await cookies();
-  jar.set(COOKIE, token, {
+  jar.set(cookieName(), token, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
     maxAge: MAX_AGE,
     secure: process.env.NODE_ENV === "production",
+    priority: "high",
   });
 }
 
 export async function clearSession() {
   const jar = await cookies();
-  jar.delete(COOKIE);
+  jar.delete(cookieName());
 }
 
 export async function isAuthed() {
   const jar = await cookies();
-  const token = jar.get(COOKIE)?.value;
+  const token = jar.get(cookieName())?.value;
   if (!token) return false;
   const parts = token.split(".");
   if (parts.length !== 3) return false;
   const [exp, nonce, mac] = parts;
+  if (!/^\d{13}$/.test(exp) || !/^[a-f0-9]{32}$/.test(nonce) || !/^[a-f0-9]{64}$/.test(mac)) {
+    return false;
+  }
   const payload = `${exp}.${nonce}`;
-  const expected = sign(payload);
+  let expected: string;
+  try {
+    expected = sign(payload);
+  } catch {
+    return false;
+  }
   const a = Buffer.from(mac);
   const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) return false;

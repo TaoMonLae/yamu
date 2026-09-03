@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/auth";
 import { getBrandSettings, updateBrandSettings } from "@/lib/branding";
+import { hasAcceptableContentLength } from "@/lib/http";
+import { isTrustedMutation } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,8 +15,14 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isTrustedMutation(request)) {
+    return NextResponse.json({ error: "Request rejected." }, { status: 403 });
+  }
   if (!(await isAuthed())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+  if (!hasAcceptableContentLength(request, 3 * 1024 * 1024)) {
+    return NextResponse.json({ error: "Branding upload is too large." }, { status: 413 });
   }
 
   try {

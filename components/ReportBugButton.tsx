@@ -37,7 +37,7 @@ export function ReportBugButton() {
     try {
       const response = await fetch("/api/suggestions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
         body: JSON.stringify({
           kind: "bug",
           text: summary,
