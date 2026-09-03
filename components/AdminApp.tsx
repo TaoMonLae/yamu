@@ -56,6 +56,11 @@ export function AdminApp() {
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [editing, setEditing] = useState<NameRecord | null>(null);
+  const [editingError, setEditingError] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [deletingNameId, setDeletingNameId] = useState<number | null>(null);
+  const [catalogMessage, setCatalogMessage] = useState("");
+  const [catalogError, setCatalogError] = useState("");
   const [reviewing, setReviewing] = useState<SuggestionDraft | null>(null);
   const [addingWord, setAddingWord] = useState(false);
   const [manualName, setManualName] = useState<NameInput>({ mon: "", burmese: "", english: "", notes: "", credit: "" });
@@ -202,25 +207,52 @@ export function AdminApp() {
   async function saveEdit(event: FormEvent) {
     event.preventDefault();
     if (!editing) return;
-    const response = await fetch(`/api/admin/names/${editing.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editing),
-    });
-    if (!response.ok) {
-      const data = (await response.json()) as { error?: string };
-      setError(data.error || "Could not save that row.");
-      return;
+    setSavingEdit(true);
+    setEditingError("");
+    setCatalogError("");
+    setCatalogMessage("");
+    try {
+      const response = await fetch(`/api/admin/names/${editing.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editing),
+      });
+      const data = (await response.json()) as { error?: string; result?: NameRecord };
+      if (!response.ok) {
+        setEditingError(data.error || "Could not save that name.");
+        return;
+      }
+      setEditing(null);
+      setCatalogMessage(`Name #${editing.id} updated in SQLite and names.json.`);
+      await loadNames(query);
+    } catch {
+      setEditingError("Could not reach the server. The name was not updated.");
+    } finally {
+      setSavingEdit(false);
     }
-    setEditing(null);
-    await loadNames(query);
   }
 
-  async function removeName(id: number) {
-    if (!window.confirm("Delete this name from SQLite and the JSON catalog?")) return;
-    await fetch(`/api/admin/names/${id}`, { method: "DELETE" });
-    await refreshSession();
-    await loadNames(query);
+  async function removeName(row: NameRecord) {
+    const label = row.englishVariants[0] || row.burmeseVariants[0] || row.monVariants[0] || `#${row.id}`;
+    if (!window.confirm(`Delete “${label}” from SQLite and names.json? This cannot be undone.`)) return;
+    setDeletingNameId(row.id);
+    setCatalogError("");
+    setCatalogMessage("");
+    try {
+      const response = await fetch(`/api/admin/names/${row.id}`, { method: "DELETE" });
+      const data = (await response.json()) as { error?: string; count?: number };
+      if (!response.ok) {
+        setCatalogError(data.error || `Could not delete “${label}”.`);
+        return;
+      }
+      setCount(data.count ?? Math.max(0, count - 1));
+      setCatalogMessage(`“${label}” was deleted from SQLite and names.json.`);
+      await loadNames(query);
+    } catch {
+      setCatalogError(`Could not reach the server. “${label}” was not deleted.`);
+    } finally {
+      setDeletingNameId(null);
+    }
   }
 
   async function addManualName(event: FormEvent) {
@@ -320,6 +352,9 @@ export function AdminApp() {
   }
 
   function editRow(row: NameRecord) {
+    setEditingError("");
+    setCatalogError("");
+    setCatalogMessage("");
     setEditing({
       ...row,
       mon: row.monVariants.join(", "),
@@ -689,6 +724,8 @@ export function AdminApp() {
           ) : null}
 
           {manualMessage ? <p role="status" className="mt-5 border-l-4 border-success bg-paper px-4 py-3 text-[12px] text-success">{manualMessage}</p> : null}
+          {catalogError ? <p role="alert" className="mt-5 border border-accent px-4 py-3 text-[12px] text-accent">{catalogError}</p> : null}
+          {catalogMessage ? <p role="status" className="mt-5 border-l-4 border-success bg-paper px-4 py-3 text-[12px] text-success">{catalogMessage}</p> : null}
 
           <div className="mt-5 overflow-x-auto border border-ink bg-paper">
             <table className="w-full min-w-[840px] border-collapse text-left text-[13px]">
@@ -703,7 +740,14 @@ export function AdminApp() {
                     <td className="border-r border-pewter px-3 py-3">{row.englishVariants.join(" · ")}</td>
                     <td className="max-w-[280px] border-r border-pewter px-3 py-3 text-ash">{row.notes}</td>
                     <td className="border-r border-pewter px-3 py-3 text-ash">{row.credit || "—"}</td>
-                    <td className="px-3 py-3"><div className="flex gap-3"><button type="button" onClick={() => editRow(row)} className="micro-label border-b border-ink pb-1">Edit</button><button type="button" onClick={() => void removeName(row.id)} className="micro-label border-b border-transparent pb-1 text-ash hover:border-accent hover:text-accent">Delete</button></div></td>
+                    <td className="px-3 py-3">
+                      <div className="flex gap-3">
+                        <button type="button" disabled={deletingNameId === row.id} onClick={() => editRow(row)} className="micro-label border-b border-ink pb-1 disabled:cursor-not-allowed disabled:opacity-40">Edit</button>
+                        <button type="button" disabled={deletingNameId === row.id} onClick={() => void removeName(row)} className="micro-label border-b border-transparent pb-1 text-ash hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40" aria-label={`Delete ${row.englishVariants[0] || row.burmeseVariants[0] || row.monVariants[0] || `name ${row.id}`}`}>
+                          {deletingNameId === row.id ? "Deleting…" : "Delete"}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -775,7 +819,7 @@ export function AdminApp() {
             <form onSubmit={saveEdit} className="w-full max-w-xl border border-ink bg-canvas">
               <div className="flex items-center justify-between border-b border-ink px-5 py-4">
                 <h3 id="edit-name-title" className="font-display text-[22px] font-semibold uppercase">Edit catalog name</h3>
-                <button type="button" onClick={() => setEditing(null)} className="text-[22px]" aria-label="Close edit dialog">×</button>
+                <button type="button" disabled={savingEdit} onClick={() => { setEditing(null); setEditingError(""); }} className="text-[22px] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Close edit dialog">×</button>
               </div>
               <div className="space-y-5 px-5 py-6">
                 <p className="text-[12px] leading-5 text-ash">Separate alternate spellings with commas. The first value is the default shown to users.</p>
@@ -785,7 +829,7 @@ export function AdminApp() {
                   ["english", "English variants", false],
                 ] as const).map(([key, label, script]) => (
                   <label key={key} className="micro-label block text-ash">{label}
-                    <input value={editing[key]} onChange={(event) => setEditing({ ...editing, [key]: event.target.value })} className={`mt-2 h-12 w-full border border-ink bg-paper px-3 text-[16px] font-normal normal-case tracking-normal outline-none focus:border-accent ${script ? "font-script" : "font-sans"}`} />
+                    <input required lang={key === "mon" ? "mnw" : key === "burmese" ? "my" : "en"} value={editing[key]} onChange={(event) => setEditing({ ...editing, [key]: event.target.value })} className={`mt-2 h-12 w-full border border-ink bg-paper px-3 text-[16px] font-normal normal-case tracking-normal outline-none focus:border-accent ${script ? "font-script" : "font-sans"}`} />
                   </label>
                 ))}
                 <label className="micro-label block text-ash">Notes
@@ -794,10 +838,11 @@ export function AdminApp() {
                 <label className="micro-label block text-ash">Contributor credit
                   <input maxLength={80} value={editing.credit} onChange={(event) => setEditing({ ...editing, credit: event.target.value })} className="mt-2 h-12 w-full border border-ink bg-paper px-3 font-sans text-[14px] font-normal normal-case tracking-normal outline-none focus:border-accent" />
                 </label>
+                {editingError ? <p role="alert" className="border-t border-accent pt-3 text-[12px] text-accent">{editingError}</p> : null}
               </div>
               <div className="flex justify-end gap-2 border-t border-ink px-5 py-4">
-                <button type="button" onClick={() => setEditing(null)} className="min-h-11 border border-ink px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em]">Cancel</button>
-                <button type="submit" className="min-h-11 bg-accent px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] text-on-accent">Save + rewrite JSON</button>
+                <button type="button" disabled={savingEdit} onClick={() => { setEditing(null); setEditingError(""); }} className="min-h-11 border border-ink px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] disabled:cursor-not-allowed disabled:opacity-40">Cancel</button>
+                <button type="submit" disabled={savingEdit} className="min-h-11 bg-accent px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] text-on-accent disabled:cursor-not-allowed disabled:opacity-50">{savingEdit ? "Saving…" : "Save + rewrite JSON"}</button>
               </div>
             </form>
           </div>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/auth";
-import { deleteName, updateName } from "@/lib/db";
+import { countNames, deleteName, updateName } from "@/lib/db";
 import { readJsonObject } from "@/lib/http";
 import { validateNameInput } from "@/lib/name-input";
 
@@ -38,5 +38,5 @@ export async function DELETE(
   if (!ok) {
     return NextResponse.json({ error: "Name not found." }, { status: 404 });
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, count: countNames() });
 }
