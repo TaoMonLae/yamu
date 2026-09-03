@@ -123,3 +123,14 @@ npm run import:myanmar-names   # Import the fallback Myanmar name source
 The app builds as a standalone Next.js server and stores its catalog on disk. The included guide covers Node.js, PM2, nginx, TLS, persistent data, and backups on Ubuntu.
 
 See [\`deploy/UBUNTU.md\`](deploy/UBUNTU.md) for the full deployment steps.
+
+## License
+
+Yamu's original software source code and documentation are available under the
+[MIT License](LICENSE).
+
+Catalog data, bundled fonts, photos, logos, favicons, and app icons are not
+covered by the MIT License. Some catalog records use CC BY-NC-ND 4.0 and have
+noncommercial and no-derivatives restrictions. Read
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) before redistributing the
+project or using its data and assets commercially.
