@@ -93,14 +93,7 @@ export function SiteHeader({ lang, onLang, admin, about }: Props) {
             <span className={`hidden items-center border-r border-pewter px-4 text-[11px] font-semibold text-ash sm:flex ${usesMyanmarScript ? "font-script" : "font-display uppercase tracking-[0.08em]"}`}>
               {copy.admin}
             </span>
-          ) : (
-            <Link
-              href="/admin"
-              className={`hidden items-center border-r border-pewter px-4 text-[11px] font-semibold text-ink no-underline transition-colors hover:bg-mist sm:flex ${usesMyanmarScript ? "font-script" : "font-display uppercase tracking-[0.08em]"}`}
-            >
-              {copy.admin}
-            </Link>
-          )}
+          ) : null}
         </div>
       </div>
     </header>

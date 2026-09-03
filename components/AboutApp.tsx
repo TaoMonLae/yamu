@@ -205,6 +205,15 @@ export function AboutApp() {
             </Link>
           </div>
         </section>
+
+        <footer className="mt-5 flex justify-end" aria-label="Administrative access">
+          <Link
+            href="/admin"
+            className="font-display text-[10px] font-medium uppercase tracking-[0.1em] text-stone no-underline opacity-70 transition-[color,opacity] hover:text-ink hover:opacity-100"
+          >
+            Admin access
+          </Link>
+        </footer>
       </main>
     </div>
   );
