@@ -32,6 +32,7 @@ export function Converter() {
   });
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
   const lookupVersion = useRef(0);
   const lookupAbort = useRef<AbortController | null>(null);
   const copy = t(lang);
@@ -75,6 +76,7 @@ export function Converter() {
       if (requestVersion !== lookupVersion.current) return;
       setResults(data.results);
       setSearchMeta({ mode: data.mode, tokens: data.tokens, missingTokens: data.missingTokens });
+      if (data.results.length) setSuggesting(false);
     } catch (lookupError) {
       if (lookupError instanceof DOMException && lookupError.name === "AbortError") return;
       if (requestVersion !== lookupVersion.current) return;
@@ -105,6 +107,7 @@ export function Converter() {
   }
 
   function trySample(sample: string) {
+    setSuggesting(false);
     setQuery(sample);
     setSource("auto");
     void lookup(sample, "auto");
@@ -162,7 +165,10 @@ export function Converter() {
                 lang={usesMyanmarScript ? uiLang : queryUsesMyanmarScript ? "my" : "en"}
                 value={query}
                 maxLength={200}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                  setSuggesting(false);
+                  setQuery(event.target.value);
+                }}
                 placeholder={copy.placeholder}
                 autoFocus
                 autoComplete="off"
@@ -191,7 +197,10 @@ export function Converter() {
                     <button
                       key={item}
                       type="button"
-                      onClick={() => setSource(item)}
+                      onClick={() => {
+                        setSuggesting(false);
+                        setSource(item);
+                      }}
                       aria-pressed={source === item}
                       className={`min-h-10 border-r border-pewter px-4 text-[12px] last:border-r-0 ${
                         source === item ? "bg-ink text-canvas" : "bg-paper text-ink hover:bg-mist"
@@ -260,14 +269,33 @@ export function Converter() {
             {results?.map((row, index) => (
               <SpecimenRow key={specimenResultKey(row)} row={row} lang={lang} index={index + 1} />
             ))}
-            {!pending && results?.length === 0 && query.trim() ? (
+            {!pending && results?.length === 0 && query.trim() ? suggesting ? (
               <SuggestionCard
                 key={`${query}-${searchMeta.missingTokens.join("|")}`}
                 query={query}
                 missingTokens={searchMeta.missingTokens}
                 initialSource={suggestionSource}
                 lang={lang}
+                onCancel={() => setSuggesting(false)}
               />
+            ) : (
+              <div className="grid border border-ink bg-paper sm:grid-cols-[104px_minmax(0,1fr)_auto] sm:items-stretch">
+                <div className="flex items-center justify-between bg-ink px-5 py-4 text-canvas sm:block sm:px-4 sm:py-5">
+                  <p className="font-display text-[10px] font-semibold uppercase tracking-[0.1em] text-canvas/55">No match</p>
+                  <p className="font-display text-[30px] font-semibold leading-none text-accent sm:mt-3">00</p>
+                </div>
+                <div className="border-b border-ink px-5 py-5 sm:border-b-0 sm:border-r sm:px-6">
+                  <p lang={uiLang} className={`max-w-[62ch] text-ink ${usesMyanmarScript ? "font-script text-[16px] leading-[1.7]" : "text-[15px] font-medium leading-6"}`}>{copy.missingQuestion}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSuggesting(true)}
+                  className={`group flex min-h-14 items-center justify-between gap-5 bg-paper px-5 text-left text-ink transition-colors hover:bg-accent hover:text-on-accent sm:min-w-[190px] ${usesMyanmarScript ? "font-script text-[14px]" : "font-display text-[12px] font-semibold uppercase tracking-[0.06em]"}`}
+                >
+                  <span lang={uiLang}>{copy.suggestWord}</span>
+                  <span className="text-[20px] transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+                </button>
+              </div>
             ) : null}
           </div>
         </section>

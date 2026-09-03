@@ -6,7 +6,13 @@ import { SpotlightCard } from "@/components/reactbits/SpotlightCard";
 import { t } from "@/lib/i18n";
 import type { Language, UiLanguage } from "@/lib/types";
 
-type Props = { query: string; missingTokens: string[]; initialSource: Language; lang: UiLanguage };
+type Props = {
+  query: string;
+  missingTokens: string[];
+  initialSource: Language;
+  lang: UiLanguage;
+  onCancel: () => void;
+};
 
 const SOURCE_OPTIONS: Array<{ value: Language; short: string; label: string }> = [
   { value: "mon", short: "01", label: "Mon / မန်" },
@@ -15,7 +21,7 @@ const SOURCE_OPTIONS: Array<{ value: Language; short: string; label: string }> =
 ];
 const EMPTY_SPELLINGS: Record<Language, string> = { mon: "", burmese: "", english: "" };
 
-export function SuggestionCard({ query, missingTokens, initialSource, lang }: Props) {
+export function SuggestionCard({ query, missingTokens, initialSource, lang, onCancel }: Props) {
   const copy = t(lang);
   const initialText = missingTokens.length === 1 ? missingTokens[0] : query.trim();
   const [text, setText] = useState(initialText);
@@ -79,7 +85,12 @@ export function SuggestionCard({ query, missingTokens, initialSource, lang }: Pr
           <p className="font-display text-[42px] font-semibold leading-none md:mt-10">+01</p>
         </div>
         <div className="px-5 py-6 sm:px-7 sm:py-7">
-          <p lang={uiLang} className={`${uiUsesScript ? "font-script text-[26px] leading-[1.5]" : "text-[30px] font-semibold tracking-[-0.035em]"} text-ink`}>{copy.missingTitle}</p>
+          <div className="flex items-start justify-between gap-5">
+            <p lang={uiLang} className={`${uiUsesScript ? "font-script text-[26px] leading-[1.5]" : "text-[30px] font-semibold tracking-[-0.035em]"} text-ink`}>{copy.missingTitle}</p>
+            <button type="button" onClick={onCancel} className={`shrink-0 border-b border-ink pb-1 text-ink hover:border-accent hover:text-accent ${uiUsesScript ? "font-script text-[12px]" : "font-display text-[10px] font-semibold uppercase tracking-[0.07em]"}`}>
+              {copy.cancelSuggestion} ×
+            </button>
+          </div>
           <p className="mt-3 max-w-[64ch] text-[13px] leading-6 text-ash">One spelling is enough. Add the matching forms only if you know them; the catalog desk verifies every entry.</p>
           {missingTokens.length > 1 ? (
             <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-pewter pt-4">
