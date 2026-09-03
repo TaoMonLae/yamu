@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/yamu-logo.png" alt="Yamu logo" width="128" height="128">
+</p>
+
 # Yamu (ယၟု)
 
 Yamu is a name index for Mon, Burmese, and English. Search in any of the three languages, compare spellings, choose a preferred variant, copy individual names, or download the selected result as a PNG.
