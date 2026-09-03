@@ -172,7 +172,7 @@ export function AboutApp() {
           </div>
         </section>
 
-        <section className="grid border border-ink bg-paper md:grid-cols-[220px_1fr_auto]" aria-labelledby="invitation-heading">
+        <section className="grid border border-ink bg-paper md:grid-cols-[220px_1fr_minmax(220px,260px)]" aria-labelledby="invitation-heading">
           <div className="flex min-h-36 items-center border-b border-ink bg-ink px-6 text-canvas md:border-b-0 md:border-r">
             <p className="font-display text-[48px] font-semibold leading-none">03</p>
           </div>
@@ -185,10 +185,25 @@ export function AboutApp() {
               Yamu is still growing. If it helps even one teacher, student, or family feel more confident about a name&apos;s spelling, the work is worthwhile.
             </p>
           </div>
-          <Link href="/" className="flex min-h-20 items-center justify-between gap-8 border-t border-ink bg-accent px-6 font-display text-[13px] font-semibold uppercase tracking-[0.06em] text-on-accent no-underline transition-colors hover:bg-[var(--index-accent-dark)] md:min-h-full md:border-l md:border-t-0">
-            Search Yamu
-            <span aria-hidden="true">→</span>
-          </Link>
+          <div className="grid border-t border-ink md:min-h-full md:grid-rows-2 md:border-l md:border-t-0">
+            <a
+              href="https://github.com/TaoMonLae/yamu"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="View the Yamu repository on GitHub (opens in a new tab)"
+              className="group flex min-h-24 items-center justify-between gap-6 bg-ink px-6 font-display text-canvas no-underline transition-colors hover:bg-accent hover:text-on-accent md:min-h-0"
+            >
+              <span className="flex flex-col gap-2">
+                <span className="text-[10px] font-normal uppercase tracking-[0.1em] opacity-60">Source / GitHub</span>
+                <span className="text-[13px] font-semibold uppercase tracking-[0.06em]">Yamu repository</span>
+              </span>
+              <span aria-hidden="true" className="text-lg transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5">↗</span>
+            </a>
+            <Link href="/" className="group flex min-h-20 items-center justify-between gap-8 border-t border-ink bg-accent px-6 font-display text-[13px] font-semibold uppercase tracking-[0.06em] text-on-accent no-underline transition-colors hover:bg-[var(--index-accent-dark)] md:min-h-0">
+              Search Yamu
+              <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
+            </Link>
+          </div>
         </section>
       </main>
     </div>
