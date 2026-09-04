@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAuthed } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 import { hasAcceptableContentLength } from "@/lib/http";
 import { parseSpreadsheet } from "@/lib/import";
 import { isTrustedMutation } from "@/lib/request-security";
@@ -10,9 +10,8 @@ export async function POST(request: Request) {
   if (!isTrustedMutation(request)) {
     return NextResponse.json({ error: "Request rejected." }, { status: 403 });
   }
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const access = await requireCapability("catalog:import");
+  if (!access.ok) return access.response;
   if (!hasAcceptableContentLength(request, 11 * 1024 * 1024)) {
     return NextResponse.json({ error: "Keep spreadsheet uploads under 10 MB." }, { status: 413 });
   }

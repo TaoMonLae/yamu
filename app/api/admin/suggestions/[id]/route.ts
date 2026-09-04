@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAuthed } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 import { approveSuggestion, rejectSuggestion, resolveSuggestion } from "@/lib/db";
 import { readJsonObject } from "@/lib/http";
 import { validateNameInput } from "@/lib/name-input";
@@ -14,9 +14,8 @@ export async function PATCH(
   if (!isTrustedMutation(request)) {
     return NextResponse.json({ error: "Request rejected." }, { status: 403 });
   }
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const access = await requireCapability("suggestions:review");
+  if (!access.ok) return access.response;
   const { id } = await context.params;
   const suggestionId = Number(id);
   if (!Number.isSafeInteger(suggestionId) || suggestionId <= 0) {

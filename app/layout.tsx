@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
@@ -81,17 +83,20 @@ export default async function RootLayout({
         {branding.faviconUrl ? <link data-brand-favicon="true" rel="icon" href={branding.faviconUrl} /> : null}
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('yamu-theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}})()`,
           }}
         />
       </head>
       <body className="min-h-full bg-canvas text-ink">
-        <PwaRegistration />
-        <BrandingProvider initialBranding={branding}>
-          <BlinkingSquares />
-          <div className="app-layer">{children}</div>
-        </BrandingProvider>
+        <ClerkProvider afterSignOutUrl="/" appearance={{ theme: shadcn, variables: { colorPrimary: branding.accentColor, borderRadius: "2px" } }}>
+          <PwaRegistration />
+          <BrandingProvider initialBranding={branding}>
+            <BlinkingSquares />
+            <div className="app-layer">{children}</div>
+          </BrandingProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

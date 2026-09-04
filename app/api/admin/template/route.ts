@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAuthed } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -9,9 +9,8 @@ const TEMPLATE = `mon,burmese,english,notes,credit
 `;
 
 export async function GET() {
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const access = await requireCapability("catalog:export");
+  if (!access.ok) return access.response;
 
   return new NextResponse(TEMPLATE, {
     headers: {

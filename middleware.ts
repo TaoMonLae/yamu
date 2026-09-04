@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
-export function middleware(request: NextRequest) {
+function securityResponse(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
   const development = process.env.NODE_ENV === "development";
   const policy = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' blob: data:",
+    "img-src 'self' blob: data: https://img.clerk.com",
     "font-src 'self' data:",
-    `connect-src 'self'${development ? " ws: wss:" : ""}`,
+    `connect-src 'self' https://*.clerk.accounts.dev https://clerk-telemetry.com${development ? " ws: wss:" : ""}`,
     "worker-src 'self' blob:",
+    "frame-src 'self' https://*.clerk.accounts.dev",
     "manifest-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
@@ -30,14 +32,18 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
+export default clerkMiddleware((_auth, request) => securityResponse(request));
+
 export const config = {
   matcher: [
     {
-      source: "/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|icons/).*)",
+      source: "/((?!api|trpc|__clerk|_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|icons/).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },
       ],
     },
+    "/(api|trpc)(.*)",
+    "/__clerk/:path*",
   ],
 };

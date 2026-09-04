@@ -48,6 +48,16 @@ type ImportBackupRow = {
   names_json: string;
 };
 
+type SuggestionLinkBackup = {
+  suggestionId: number;
+  nameId: number;
+};
+
+type ImportBackupPayload = {
+  names: NameRow[];
+  suggestionLinks: SuggestionLinkBackup[];
+};
+
 type PortableName = {
   mon?: string | string[];
   burmese?: string | string[];
@@ -619,6 +629,14 @@ export function replaceAllNames(records: NameInput[], batchId: string, filename:
   );
   database.transaction(() => {
     const previousNames = database.prepare("SELECT * FROM names ORDER BY id").all() as NameRow[];
+    const suggestionLinks = database
+      .prepare(
+        `SELECT id AS suggestionId, linked_name_id AS nameId
+         FROM suggestions
+         WHERE linked_name_id IS NOT NULL`,
+      )
+      .all() as SuggestionLinkBackup[];
+    database.prepare("UPDATE suggestions SET linked_name_id = NULL WHERE linked_name_id IS NOT NULL").run();
     database.exec("DELETE FROM names");
     for (const row of records) {
       insert.run(
@@ -636,7 +654,7 @@ export function replaceAllNames(records: NameInput[], batchId: string, filename:
       .run(batchId, filename, records.length, createdAt);
     database
       .prepare("INSERT INTO import_backups (import_id, names_json) VALUES (?, ?)")
-      .run(batchId, JSON.stringify(previousNames));
+      .run(batchId, JSON.stringify({ names: previousNames, suggestionLinks } satisfies ImportBackupPayload));
   })();
 }
 
@@ -675,7 +693,9 @@ export function undoLastImport() {
     const deleted = database.prepare("DELETE FROM names WHERE batch_id = ?").run(latest.id);
     let restored = 0;
     if (existingBackup) {
-      const previousNames = JSON.parse(existingBackup.names_json) as NameRow[];
+      const parsedBackup = JSON.parse(existingBackup.names_json) as NameRow[] | ImportBackupPayload;
+      const previousNames = Array.isArray(parsedBackup) ? parsedBackup : parsedBackup.names;
+      const suggestionLinks = Array.isArray(parsedBackup) ? [] : parsedBackup.suggestionLinks;
       const restore = database.prepare(
         `INSERT INTO names (id, mon, burmese, english, notes, credit, batch_id, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -683,6 +703,12 @@ export function undoLastImport() {
       for (const row of previousNames) {
         restore.run(row.id, row.mon, row.burmese, row.english, row.notes, row.credit ?? "", row.batch_id, row.created_at);
         restored += 1;
+      }
+      const restoreSuggestionLink = database.prepare(
+        "UPDATE suggestions SET linked_name_id = ? WHERE id = ?",
+      );
+      for (const link of suggestionLinks) {
+        restoreSuggestionLink.run(link.nameId, link.suggestionId);
       }
       database.prepare("DELETE FROM import_backups WHERE import_id = ?").run(latest.id);
     }
@@ -712,8 +738,12 @@ export function updateName(id: number, input: NameInput) {
 }
 
 export function deleteName(id: number) {
-  const result = getDb().prepare("DELETE FROM names WHERE id = ?").run(id);
-  exportNamesJson();
+  const database = getDb();
+  const result = database.transaction(() => {
+    database.prepare("UPDATE suggestions SET linked_name_id = NULL WHERE linked_name_id = ?").run(id);
+    return database.prepare("DELETE FROM names WHERE id = ?").run(id);
+  })();
+  if (result.changes > 0) exportNamesJson();
   return result.changes > 0;
 }
 

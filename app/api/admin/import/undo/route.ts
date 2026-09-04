@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAuthed } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 import { undoLastImport } from "@/lib/db";
 import { isTrustedMutation } from "@/lib/request-security";
 
@@ -9,9 +9,8 @@ export async function POST(request: Request) {
   if (!isTrustedMutation(request)) {
     return NextResponse.json({ error: "Request rejected." }, { status: 403 });
   }
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const access = await requireCapability("catalog:import");
+  if (!access.ok) return access.response;
 
   try {
     const result = undoLastImport();

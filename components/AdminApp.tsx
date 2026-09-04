@@ -1,31 +1,35 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import {
+  ArrowRight,
+  Bug,
+  Check,
+  FileSpreadsheet,
+  Inbox,
+  Languages,
+  LayoutDashboard,
+  Palette,
+  ShieldCheck,
+  Upload,
+  Users,
+} from "lucide-react";
 import { BrandSettings } from "@/components/BrandSettings";
 import { useBranding } from "@/components/BrandingProvider";
-import { SiteHeader } from "@/components/SiteHeader";
-import { SpotlightCard } from "@/components/reactbits/SpotlightCard";
-import type { ColumnKey, ColumnMap, NameInput, NameRecord, SuggestionRecord, UiLanguage } from "@/lib/types";
+import AppShell1, { type AppShellItem } from "@/components/blocks/app-shell-1";
+import Dashboard1 from "@/components/blocks/dashboard-1";
+import DataTable1 from "@/components/blocks/data-table-1";
+import type { AdminIdentity, AdminRole } from "@/lib/auth";
+import type { ColumnKey, ColumnMap, NameInput, NameRecord, SuggestionRecord } from "@/lib/types";
 
-type Step = "upload" | "map" | "done";
-type Mode = "append" | "replace";
+type SectionId = "overview" | "catalog" | "reviews" | "import" | "team" | "branding";
+type ImportStep = "upload" | "map" | "done";
+type ImportMode = "append" | "replace";
+type SuggestionDraft = { suggestion: SuggestionRecord; mon: string; burmese: string; english: string; notes: string; credit: string };
+type TeamUser = { id: string; name: string; email: string; imageUrl: string; role: AdminRole; createdAt: number; lastSignInAt: number | null };
 
-type SuggestionDraft = {
-  suggestion: SuggestionRecord;
-  mon: string;
-  burmese: string;
-  english: string;
-  notes: string;
-  credit: string;
-};
-
-const STEPS: Array<{ id: Step; label: string; detail: string }> = [
-  { id: "upload", label: "Upload", detail: ".csv or .xlsx" },
-  { id: "map", label: "Map columns", detail: "Review variants" },
-  { id: "done", label: "Write JSON", detail: "Publish catalog" },
-];
-
-const FIELD_OPTIONS: { value: ColumnKey; label: string }[] = [
+const FIELD_OPTIONS: Array<{ value: ColumnKey; label: string }> = [
   { value: "mon", label: "Mon" },
   { value: "burmese", label: "Burmese" },
   { value: "english", label: "English" },
@@ -34,123 +38,111 @@ const FIELD_OPTIONS: { value: ColumnKey; label: string }[] = [
   { value: "skip", label: "Skip" },
 ];
 
-export function AdminApp() {
+const button = "inline-flex min-h-10 items-center justify-center gap-2 border border-[#252624] px-4 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--index-accent)] focus-visible:ring-offset-2";
+const primaryButton = `${button} border-[var(--index-accent)] bg-[var(--index-accent)] text-white hover:brightness-95`;
+const field = "mt-2 h-11 w-full border border-[#cbccc8] bg-white px-3 text-[14px] outline-none focus:border-[var(--index-accent)] focus-visible:ring-1 focus-visible:ring-[var(--index-accent)]";
+
+function SectionHeading({ eyebrow, title, copy, actions }: { eyebrow: string; title: string; copy: string; actions?: React.ReactNode }) {
+  return (
+    <header className="mb-6 flex flex-col gap-5 border-b border-[#dfe0dc] pb-6 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p className="font-mono text-[10px] uppercase tracking-[0.13em] text-[#7d7e79]">{eyebrow}</p>
+        <h1 className="mt-3 text-[clamp(32px,4vw,48px)] font-semibold leading-none tracking-[-0.045em]">{title}</h1>
+        <p className="mt-3 max-w-[68ch] text-[13px] leading-6 text-[#686965]">{copy}</p>
+      </div>
+      {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
+    </header>
+  );
+}
+
+export function AdminApp({ identity }: { identity: AdminIdentity }) {
   const { branding } = useBranding();
-  const [lang, setLang] = useState<UiLanguage>("english");
-  const [authed, setAuthed] = useState<boolean | null>(null);
-  const [password, setPassword] = useState("");
-  const [authError, setAuthError] = useState("");
+  const isAdmin = identity.role === "admin";
+  const canManage = identity.role === "admin" || identity.role === "manager";
+  const [active, setActive] = useState<SectionId>("overview");
   const [count, setCount] = useState(0);
   const [query, setQuery] = useState("");
   const [names, setNames] = useState<NameRecord[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestionRecord[]>([]);
-  const [step, setStep] = useState<Step>("upload");
+  const [team, setTeam] = useState<TeamUser[]>([]);
+  const [step, setStep] = useState<ImportStep>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [filename, setFilename] = useState("");
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [mapping, setMapping] = useState<ColumnMap>({});
-  const [mode, setMode] = useState<Mode>("append");
+  const [mode, setMode] = useState<ImportMode>("append");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [editing, setEditing] = useState<NameRecord | null>(null);
-  const [editingError, setEditingError] = useState("");
-  const [savingEdit, setSavingEdit] = useState(false);
-  const [deletingNameId, setDeletingNameId] = useState<number | null>(null);
-  const [catalogMessage, setCatalogMessage] = useState("");
-  const [catalogError, setCatalogError] = useState("");
+  const [adding, setAdding] = useState(false);
   const [reviewing, setReviewing] = useState<SuggestionDraft | null>(null);
-  const [addingWord, setAddingWord] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [manualName, setManualName] = useState<NameInput>({ mon: "", burmese: "", english: "", notes: "", credit: "" });
-  const [manualMessage, setManualMessage] = useState("");
-  const [manualError, setManualError] = useState("");
+  const [roleSaving, setRoleSaving] = useState<string | null>(null);
+
+  const preview = useMemo(() => rows.slice(0, 6), [rows]);
+  const wordSuggestions = suggestions.filter((item) => item.kind === "word").length;
+  const bugReports = suggestions.filter((item) => item.kind === "bug").length;
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("ui-lang");
-    if (stored === "mon" || stored === "burmese" || stored === "english") setLang(stored);
-    void refreshSession();
+    void refreshWorkspace();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function changeLang(next: UiLanguage) {
-    setLang(next);
-    window.localStorage.setItem("ui-lang", next);
+  async function json<T>(response: Response): Promise<T & { error?: string }> {
+    return response.json() as Promise<T & { error?: string }>;
   }
 
-  async function refreshSession() {
+  async function refreshWorkspace() {
     const response = await fetch("/api/admin/session");
-    if (!response.ok) {
-      setAuthed(false);
+    if (response.status === 401) {
+      window.location.assign("/sign-in?redirect_url=/admin");
       return;
     }
-    const data = (await response.json()) as { count: number };
-    setAuthed(true);
+    if (!response.ok) return;
+    const data = await json<{ count: number }>(response);
     setCount(data.count);
-    await Promise.all([loadNames(""), loadSuggestions()]);
+    await Promise.all([loadNames(""), canManage ? loadSuggestions() : Promise.resolve(), isAdmin ? loadTeam() : Promise.resolve()]);
   }
 
   async function loadNames(nextQuery: string) {
-    const params = new URLSearchParams({ q: nextQuery });
-    const response = await fetch(`/api/admin/names?${params}`);
+    const response = await fetch(`/api/admin/names?${new URLSearchParams({ q: nextQuery })}`);
     if (!response.ok) return;
-    const data = (await response.json()) as { results: NameRecord[] };
+    const data = await json<{ results: NameRecord[] }>(response);
     setNames(data.results);
   }
 
   async function loadSuggestions() {
     const response = await fetch("/api/admin/suggestions");
     if (!response.ok) return;
-    const data = (await response.json()) as { suggestions: SuggestionRecord[] };
+    const data = await json<{ suggestions: SuggestionRecord[] }>(response);
     setSuggestions(data.suggestions);
   }
 
-  async function onLogin(event: FormEvent) {
-    event.preventDefault();
-    setAuthError("");
-    const response = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
-      body: JSON.stringify({ password }),
-    });
-    if (!response.ok) {
-      const data = (await response.json()) as { error?: string };
-      setAuthError(data.error || "That password does not match the admin key.");
-      return;
-    }
-    setPassword("");
-    await refreshSession();
+  async function loadTeam() {
+    const response = await fetch("/api/admin/team");
+    if (!response.ok) return;
+    const data = await json<{ users: TeamUser[] }>(response);
+    setTeam(data.users);
   }
 
-  async function onLogout() {
-    await fetch("/api/admin/logout", { method: "POST", headers: { "X-Yamu-Request": "1" } });
-    setAuthed(false);
+  function resetNotices() {
+    setMessage("");
+    setError("");
   }
 
   async function parseFile(next: File) {
+    resetNotices();
     setBusy(true);
-    setError("");
-    setMessage("");
     const body = new FormData();
     body.append("file", next);
-    const response = await fetch("/api/admin/import/parse", {
-      method: "POST",
-      headers: { "X-Yamu-Request": "1" },
-      body,
-    });
-    const data = (await response.json()) as {
-      error?: string;
-      filename?: string;
-      headers?: string[];
-      rows?: Record<string, string>[];
-      suggestedMap?: ColumnMap;
-    };
+    const response = await fetch("/api/admin/import/parse", { method: "POST", headers: { "X-Yamu-Request": "1" }, body });
+    const data = await json<{ filename?: string; headers?: string[]; rows?: Record<string, string>[]; suggestedMap?: ColumnMap }>(response);
     setBusy(false);
-    if (!response.ok) {
-      setError(data.error || "Could not read the file.");
-      return;
-    }
+    if (!response.ok) return setError(data.error || "Could not read the file.");
     setFile(next);
     setFilename(data.filename || next.name);
     setHeaders(data.headers || []);
@@ -160,137 +152,77 @@ export function AdminApp() {
   }
 
   async function commitImport() {
+    resetNotices();
     setBusy(true);
-    setError("");
     const response = await fetch("/api/admin/import/commit", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
       body: JSON.stringify({ filename, rows, mapping, mode }),
     });
-    const data = (await response.json()) as { error?: string; imported?: number; total?: number };
+    const data = await json<{ imported?: number; total?: number }>(response);
     setBusy(false);
-    if (!response.ok) {
-      setError(data.error || "Import failed.");
-      return;
-    }
-    setCount(data.total ?? 0);
-    setMessage(`${data.imported} names imported. SQLite and data/names.json are now in sync.`);
+    if (!response.ok) return setError(data.error || "Import failed.");
+    setCount(data.total ?? count);
+    setMessage(`${data.imported ?? 0} names imported. SQLite and names.json are synchronized.`);
     setStep("done");
-    await loadNames(query);
+    await loadNames("");
+  }
+
+  function resetUpload() {
+    setFile(null); setFilename(""); setHeaders([]); setRows([]); setMapping({}); setStep("upload"); resetNotices();
   }
 
   async function undoImport() {
     if (!window.confirm("Undo the most recent import and rewrite the live JSON catalog?")) return;
-    setBusy(true);
-    setError("");
-    const response = await fetch("/api/admin/import/undo", {
-      method: "POST",
-      headers: { "X-Yamu-Request": "1" },
-    });
-    const data = (await response.json()) as { error?: string; deleted?: number; restored?: number };
+    setBusy(true); resetNotices();
+    const response = await fetch("/api/admin/import/undo", { method: "POST", headers: { "X-Yamu-Request": "1" } });
+    const data = await json<{ deleted?: number; restored?: number }>(response);
     setBusy(false);
-    if (!response.ok) {
-      setError(data.error || "Nothing to undo.");
-      return;
-    }
-    setMessage(
-      data.restored
-        ? `Removed ${data.deleted} replacement rows, restored ${data.restored} previous rows, and rewrote JSON.`
-        : `Removed ${data.deleted} rows from the last import and rewrote JSON.`,
-    );
+    if (!response.ok) return setError(data.error || "Nothing to undo.");
     resetUpload();
-    await refreshSession();
+    setMessage(`Removed ${data.deleted ?? 0} imported rows${data.restored ? ` and restored ${data.restored}` : ""}.`);
+    await refreshWorkspace();
   }
 
-  function resetUpload() {
-    setFile(null);
-    setFilename("");
-    setHeaders([]);
-    setRows([]);
-    setMapping({});
-    setError("");
-    setStep("upload");
+  function editRow(row: NameRecord) {
+    resetNotices();
+    setEditing({ ...row, mon: row.monVariants.join(", "), burmese: row.burmeseVariants.join(", "), english: row.englishVariants.join(", ") });
   }
 
-  async function saveEdit(event: FormEvent) {
+  async function saveName(event: FormEvent) {
     event.preventDefault();
-    if (!editing) return;
-    setSavingEdit(true);
-    setEditingError("");
-    setCatalogError("");
-    setCatalogMessage("");
-    try {
-      const response = await fetch(`/api/admin/names/${editing.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
-        body: JSON.stringify(editing),
-      });
-      const data = (await response.json()) as { error?: string; result?: NameRecord };
-      if (!response.ok) {
-        setEditingError(data.error || "Could not save that name.");
-        return;
-      }
-      setEditing(null);
-      setCatalogMessage(`Name #${editing.id} updated in SQLite and names.json.`);
-      await loadNames(query);
-    } catch {
-      setEditingError("Could not reach the server. The name was not updated.");
-    } finally {
-      setSavingEdit(false);
-    }
+    const draft = editing ?? manualName;
+    setBusy(true); resetNotices();
+    const response = await fetch(editing ? `/api/admin/names/${editing.id}` : "/api/admin/names", {
+      method: editing ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
+      body: JSON.stringify(draft),
+    });
+    const data = await json<{ count?: number; result?: NameRecord }>(response);
+    setBusy(false);
+    if (!response.ok) return setError(data.error || "Could not save the catalog entry.");
+    setCount(data.count ?? (editing ? count : count + 1));
+    setEditing(null); setAdding(false);
+    setManualName({ mon: "", burmese: "", english: "", notes: "", credit: "" });
+    setMessage(editing ? `Catalog entry #${editing.id} updated.` : "Catalog entry added and names.json rewritten.");
+    await loadNames(query);
   }
 
   async function removeName(row: NameRecord) {
     const label = row.englishVariants[0] || row.burmeseVariants[0] || row.monVariants[0] || `#${row.id}`;
-    if (!window.confirm(`Delete “${label}” from SQLite and names.json? This cannot be undone.`)) return;
-    setDeletingNameId(row.id);
-    setCatalogError("");
-    setCatalogMessage("");
-    try {
-      const response = await fetch(`/api/admin/names/${row.id}`, {
-        method: "DELETE",
-        headers: { "X-Yamu-Request": "1" },
-      });
-      const data = (await response.json()) as { error?: string; count?: number };
-      if (!response.ok) {
-        setCatalogError(data.error || `Could not delete “${label}”.`);
-        return;
-      }
-      setCount(data.count ?? Math.max(0, count - 1));
-      setCatalogMessage(`“${label}” was deleted from SQLite and names.json.`);
-      await loadNames(query);
-    } catch {
-      setCatalogError(`Could not reach the server. “${label}” was not deleted.`);
-    } finally {
-      setDeletingNameId(null);
-    }
+    if (!window.confirm(`Delete “${label}” from SQLite and names.json?`)) return;
+    setDeletingId(row.id); resetNotices();
+    const response = await fetch(`/api/admin/names/${row.id}`, { method: "DELETE", headers: { "X-Yamu-Request": "1" } });
+    const data = await json<{ count?: number }>(response);
+    setDeletingId(null);
+    if (!response.ok) return setError(data.error || "Could not delete the entry.");
+    setCount(data.count ?? Math.max(0, count - 1));
+    setMessage(`“${label}” deleted.`);
+    await loadNames(query);
   }
 
-  async function addManualName(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setManualError("");
-    setManualMessage("");
-    const response = await fetch("/api/admin/names", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
-      body: JSON.stringify(manualName),
-    });
-    const data = (await response.json()) as { error?: string; count?: number; result?: NameRecord };
-    setBusy(false);
-    if (!response.ok) {
-      setManualError(data.error || "Could not add that catalog word.");
-      return;
-    }
-    setManualName({ mon: "", burmese: "", english: "", notes: "", credit: "" });
-    setAddingWord(false);
-    setQuery("");
-    setCount(data.count ?? count + 1);
-    setManualMessage(`Catalog word #${data.result?.id ?? "new"} added to SQLite and names.json.`);
-    await loadNames("");
-  }
-
-  function reviewSuggestion(suggestion: SuggestionRecord) {
+  function openReview(suggestion: SuggestionRecord) {
+    resetNotices();
     setReviewing({
       suggestion,
       mon: suggestion.suggestedMon || (suggestion.source === "mon" ? suggestion.text : ""),
@@ -301,564 +233,172 @@ export function AdminApp() {
     });
   }
 
-  async function rejectPendingSuggestion(id: number) {
-    setError("");
+  async function reviewAction(id: number, action: "reject" | "resolve") {
+    resetNotices();
     const response = await fetch(`/api/admin/suggestions/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
-      body: JSON.stringify({ action: "reject" }),
+      body: JSON.stringify({ action }),
     });
-    const data = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      setError(data.error || "Could not reject the suggestion.");
-      return;
-    }
+    const data = await json<Record<string, never>>(response);
+    if (!response.ok) return setError(data.error || "Could not update the review queue.");
+    setMessage(action === "resolve" ? "Bug report resolved." : "Suggestion rejected.");
     await loadSuggestions();
   }
 
-  async function resolveBugReport(id: number) {
-    setError("");
-    const response = await fetch(`/api/admin/suggestions/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
-      body: JSON.stringify({ action: "resolve" }),
-    });
-    const data = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      setError(data.error || "Could not resolve the bug report.");
-      return;
-    }
-    setMessage("Bug report marked as resolved.");
-    await loadSuggestions();
-  }
-
-  async function approvePendingSuggestion(event: FormEvent) {
+  async function approveSuggestion(event: FormEvent) {
     event.preventDefault();
     if (!reviewing) return;
-    setBusy(true);
-    setError("");
+    setBusy(true); resetNotices();
     const response = await fetch(`/api/admin/suggestions/${reviewing.suggestion.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
-      body: JSON.stringify({
-        action: "approve",
-        name: {
-          mon: reviewing.mon,
-          burmese: reviewing.burmese,
-          english: reviewing.english,
-          notes: reviewing.notes,
-          credit: reviewing.credit,
-        },
-      }),
+      body: JSON.stringify({ action: "approve", name: { mon: reviewing.mon, burmese: reviewing.burmese, english: reviewing.english, notes: reviewing.notes, credit: reviewing.credit } }),
     });
-    const data = (await response.json()) as { error?: string };
+    const data = await json<Record<string, never>>(response);
     setBusy(false);
-    if (!response.ok) {
-      setError(data.error || "Could not approve the suggestion.");
-      return;
-    }
-    setReviewing(null);
-    setMessage("Suggestion approved, added to the live catalog, and written to JSON.");
-    await refreshSession();
+    if (!response.ok) return setError(data.error || "Could not approve the suggestion.");
+    setReviewing(null); setMessage("Suggestion approved and published to the catalog.");
+    await refreshWorkspace();
   }
 
-  function editRow(row: NameRecord) {
-    setEditingError("");
-    setCatalogError("");
-    setCatalogMessage("");
-    setEditing({
-      ...row,
-      mon: row.monVariants.join(", "),
-      burmese: row.burmeseVariants.join(", "),
-      english: row.englishVariants.join(", "),
+  async function changeRole(userId: string, role: AdminRole) {
+    setRoleSaving(userId); resetNotices();
+    const response = await fetch("/api/admin/team", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
+      body: JSON.stringify({ userId, role }),
     });
+    const data = await json<{ user?: TeamUser }>(response);
+    setRoleSaving(null);
+    if (!response.ok) return setError(data.error || "Could not update the role.");
+    if (data.user) {
+      const updated = data.user;
+      setTeam((current) => current.map((item) => item.id === updated.id ? updated : item));
+    }
+    setMessage("Role updated in Clerk user metadata.");
   }
 
-  const preview = useMemo(() => rows.slice(0, 6), [rows]);
-
-  if (authed === null) {
-    return (
-      <div className="min-h-screen bg-canvas">
-        <div className="index-shell flex min-h-screen items-center">
-          <p className="micro-label animate-pulse text-ash">Opening catalog…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!authed) {
-    return (
-      <div className="min-h-screen">
-        <SiteHeader lang={lang} onLang={changeLang} admin />
-        <main className="index-shell grid min-h-[calc(100vh-73px)] md:grid-cols-2">
-          <section className="flex flex-col justify-between border-x border-pewter px-6 py-10 md:px-10 md:py-14">
-            <p className="micro-label text-ash">Restricted catalog desk</p>
-            <div className="py-16">
-              <p lang="mnw" className="font-script-display text-[clamp(58px,9vw,110px)] font-bold">ယၟု</p>
-              <h1 className="mt-5 max-w-[8ch] text-balance text-[clamp(48px,7vw,84px)] font-semibold leading-[0.92] tracking-[-0.05em]">
-                Maintain {branding.siteName}.
-              </h1>
-            </div>
-            <p className="max-w-[40ch] text-[13px] leading-6 text-ash">
-              Import spreadsheets, map language columns, review spelling variants, and publish one verified JSON catalog.
-            </p>
-          </section>
-
-          <section className="flex items-center border-r border-pewter bg-paper px-6 py-16 md:px-12">
-            <form onSubmit={onLogin} className="w-full max-w-md">
-              <p className="micro-label text-ash">Admin authentication</p>
-              <h2 className="mt-5 text-[36px] font-semibold tracking-[-0.04em]">Enter the catalog key.</h2>
-              <label htmlFor="admin-password" className="micro-label mt-10 block text-ink">
-                Password
-              </label>
-              <input
-                id="admin-password"
-                type="password"
-                name="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="mt-3 h-14 w-full border border-ink bg-paper px-4 text-[18px] outline-none focus:border-accent"
-              />
-              <button type="submit" className="mt-4 min-h-12 w-full bg-accent px-5 font-display text-[14px] font-semibold uppercase tracking-[0.06em] text-on-accent hover:bg-[var(--index-accent-dark)]">
-                Open catalog →
-              </button>
-              {authError ? <p role="alert" className="mt-4 border-t border-accent pt-3 text-[12px] text-accent">{authError}</p> : null}
-            </form>
-          </section>
-        </main>
-      </div>
-    );
-  }
+  const navItems: AppShellItem[] = [
+    { id: "overview", label: "Overview", detail: "Catalog status", icon: LayoutDashboard },
+    { id: "catalog", label: "Catalog", detail: "Names and variants", icon: Languages, badge: count },
+    { id: "reviews", label: "Review queue", detail: "Suggestions and reports", icon: Inbox, badge: suggestions.length, hidden: !canManage },
+    { id: "import", label: "Import desk", detail: "CSV and spreadsheet", icon: Upload, hidden: !canManage },
+    { id: "team", label: "Team & roles", detail: "Access control", icon: Users, hidden: !isAdmin },
+    { id: "branding", label: "Brand settings", detail: "Identity and assets", icon: Palette, hidden: !isAdmin },
+  ];
 
   return (
-    <div className="min-h-screen">
-      <SiteHeader lang={lang} onLang={changeLang} admin />
-      <main className="index-shell pb-20 pt-10">
-        <header className="grid gap-8 border-b border-ink pb-10 md:grid-cols-[1fr_auto] md:items-end">
-          <div>
-            <p className="micro-label text-ash">Catalog administration / live data</p>
-            <h1 className="mt-5 text-[clamp(52px,7vw,86px)] font-semibold leading-[0.92] tracking-[-0.05em]">Import desk.</h1>
-            <p className="mt-5 max-w-[58ch] text-[14px] leading-6 text-ash">
-              Spreadsheet cells may contain two or three spellings separated by commas, semicolons, pipes, or line breaks. The first spelling becomes the default.
-            </p>
+    <AppShell1 identity={identity} siteName={branding.siteName} items={navItems} activeId={active} onNavigate={(id) => { setActive(id as SectionId); resetNotices(); }}>
+      {message ? <p role="status" className="mb-5 border-l-2 border-[#2b7a51] bg-[#eef7f1] px-4 py-3 text-[12px] text-[#215f40]">{message}</p> : null}
+      {error ? <p role="alert" className="mb-5 border-l-2 border-[var(--index-accent)] bg-[#fff1ec] px-4 py-3 text-[12px] text-[#a83e1c]">{error}</p> : null}
+
+      {active === "overview" ? (
+        <>
+          <SectionHeading eyebrow="Workspace / live operations" title="Catalog control room." copy={`A role-aware view of ${branding.siteName}. Every write is applied to SQLite and the public JSON catalog together.`} actions={<button type="button" onClick={() => setActive("catalog")} className={primaryButton}>Open catalog <ArrowRight className="h-3.5 w-3.5" /></button>} />
+          <Dashboard1 metrics={[
+            { label: "Catalog entries", value: count.toLocaleString(), detail: "live, searchable records" },
+            { label: "Review queue", value: canManage ? suggestions.length : "—", detail: canManage ? `${wordSuggestions} words · ${bugReports} reports` : "manager access required", emphasis: suggestions.length > 0 },
+            { label: "Visible results", value: names.length, detail: query ? `filtered by “${query}”` : "latest catalog rows loaded" },
+            { label: "Access level", value: identity.role, detail: "enforced by Clerk metadata" },
+          ]} />
+
+          <div className="mt-6 grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+            <section className="border border-[#dedfdb] bg-white">
+              <div className="border-b border-[#dedfdb] px-5 py-4"><p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#777873]">Priority queue</p><h2 className="mt-2 text-[22px] font-semibold tracking-[-0.025em]">Next useful actions</h2></div>
+              {[
+                { label: "Review community submissions", detail: `${suggestions.length} pending items`, target: "reviews" as SectionId, show: canManage },
+                { label: "Add or verify a catalog spelling", detail: "Write all three language forms", target: "catalog" as SectionId, show: true },
+                { label: "Import a verified spreadsheet", detail: "Map columns before publishing", target: "import" as SectionId, show: canManage },
+                { label: "Audit teammate roles", detail: `${team.length} Clerk accounts`, target: "team" as SectionId, show: isAdmin },
+              ].filter((item) => item.show).map((item, index) => (
+                <button key={item.label} type="button" onClick={() => setActive(item.target)} className="group grid w-full grid-cols-[38px_1fr_auto] items-center gap-3 border-b border-[#e6e7e3] px-5 py-4 text-left last:border-b-0 hover:bg-[#fafaf8]">
+                  <span className="font-mono text-[10px] text-[#8a8b86]">0{index + 1}</span><span><span className="block text-[13px] font-medium">{item.label}</span><span className="mt-1 block text-[11px] text-[#777873]">{item.detail}</span></span><ArrowRight className="h-4 w-4 text-[#aaa] transition-transform group-hover:translate-x-1 group-hover:text-[var(--index-accent)]" />
+                </button>
+              ))}
+            </section>
+
+            <section className="border border-[#dedfdb] bg-[#141415] p-6 text-white">
+              <ShieldCheck className="h-5 w-5 text-[var(--index-accent)]" />
+              <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.12em] text-white/45">Your access profile</p>
+              <h2 className="mt-3 text-[30px] font-semibold capitalize tracking-[-0.035em]">{identity.role}</h2>
+              <ul className="mt-6 space-y-3 text-[12px] text-white/62">
+                <li className="flex gap-2"><Check className="h-4 w-4 text-white" /> Create and edit catalog entries</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 text-white" /> Export CSV and JSON</li>
+                {canManage ? <li className="flex gap-2"><Check className="h-4 w-4 text-white" /> Import, delete, and review</li> : null}
+                {isAdmin ? <li className="flex gap-2"><Check className="h-4 w-4 text-white" /> Manage branding and team roles</li> : null}
+              </ul>
+            </section>
           </div>
-          <div className="flex flex-wrap gap-2 md:justify-end">
-            <a href="#brand-settings" className="border border-ink bg-accent px-4 py-3 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-on-accent no-underline hover:bg-[var(--index-accent-dark)]">Brand Settings ↓</a>
-            <a href="/api/admin/template" className="border border-ink px-4 py-3 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-ink no-underline hover:bg-mist">CSV template ↓</a>
-            <a href="/api/admin/export?format=json" className="border border-ink px-4 py-3 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-ink no-underline hover:bg-mist">JSON ↓</a>
-            <a href="/api/admin/export?format=csv" className="border border-ink px-4 py-3 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-ink no-underline hover:bg-mist">CSV ↓</a>
-            <button type="button" onClick={() => void onLogout()} className="border border-ink bg-ink px-4 py-3 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-canvas hover:bg-accent hover:text-on-accent">Sign out</button>
-          </div>
-        </header>
+        </>
+      ) : null}
 
-        <BrandSettings />
+      {active === "catalog" ? (
+        <>
+          <SectionHeading eyebrow="Live database / multilingual index" title="Catalog entries." copy="Search, add, and verify Mon, Burmese, and English forms. Editors may create and edit; destructive actions remain manager-only." actions={<a href="/api/admin/template" className={`${button} text-[#252624] no-underline`}><FileSpreadsheet className="h-3.5 w-3.5" /> CSV template</a>} />
+          <DataTable1 rows={names} query={query} total={count} canWrite canDelete={canManage} deletingId={deletingId} onQuery={(value) => { setQuery(value); void loadNames(value); }} onAdd={() => { setAdding(true); resetNotices(); }} onEdit={editRow} onDelete={(row) => void removeName(row)} />
+        </>
+      ) : null}
 
-        <div className="grid border-b border-x border-pewter sm:grid-cols-3">
-          {STEPS.map((item, index) => (
-            <div key={item.id} className={`relative flex gap-4 border-b border-pewter px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 ${step === item.id ? "bg-ink text-canvas" : "bg-paper text-ink"}`}>
-              {step === item.id ? <span className="absolute inset-x-0 bottom-0 h-1 bg-accent" /> : null}
-              <span className="font-display text-[20px] font-semibold">0{index + 1}</span>
-              <span>
-                <span className="block font-display text-[13px] font-semibold uppercase tracking-[0.04em]">{item.label}</span>
-                <span className={`mt-1 block text-[11px] ${step === item.id ? "text-canvas/60" : "text-ash"}`}>{item.detail}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {step === "upload" ? (
-          <section className="mt-10">
-            <div className="mb-4 flex items-baseline justify-between gap-4">
-              <h2 className="text-[28px] font-semibold tracking-[-0.03em]">Add a source file</h2>
-              <p className="micro-label text-ash">{count} names live</p>
-            </div>
-            <SpotlightCard spotlightColor="color-mix(in srgb, var(--index-accent) 9%, transparent)" className={`border border-dashed bg-paper ${dragOver ? "border-accent" : "border-ink"}`}>
-              <label
-                onDragOver={(event) => { event.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  setDragOver(false);
-                  const next = event.dataTransfer.files[0];
-                  if (next) void parseFile(next);
-                }}
-                className="flex min-h-[300px] cursor-pointer flex-col items-center justify-center px-5 py-12 text-center"
-              >
-                <span className="flex h-16 w-16 items-center justify-center border border-ink font-display text-[28px]">↑</span>
-                <span className="mt-7 text-[clamp(30px,4vw,52px)] font-semibold tracking-[-0.04em]">Drop .csv or .xlsx</span>
-                <span className="mt-3 max-w-[46ch] text-[13px] leading-6 text-ash">A header row is required. Columns are detected automatically and can be corrected before import.</span>
-                <span className="micro-label mt-6 border-b border-ink pb-1 text-ink">{busy ? "Reading file…" : "Choose a file"}</span>
-                <input type="file" accept=".csv,.xlsx,.xls,.txt" className="sr-only" onChange={(event) => { const next = event.target.files?.[0]; if (next) void parseFile(next); }} />
-              </label>
-            </SpotlightCard>
-            {file ? <p className="mt-3 text-[12px] text-ash">Selected: {file.name}</p> : null}
-          </section>
-        ) : null}
-
-        {step === "map" ? (
-          <section className="mt-10">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <p className="micro-label text-ash">Source ready</p>
-                <h2 className="mt-3 text-[28px] font-semibold tracking-[-0.03em]">{filename}</h2>
-                <p className="mt-1 text-[13px] text-ash">{rows.length} rows · previewing the first {preview.length}</p>
-              </div>
-              <fieldset>
-                <legend className="micro-label text-ash">Import mode</legend>
-                <div className="mt-2 flex border border-ink">
-                  {(["append", "replace"] as Mode[]).map((item) => (
-                    <button key={item} type="button" onClick={() => setMode(item)} aria-pressed={mode === item} className={`min-h-11 px-4 font-display text-[11px] font-semibold uppercase tracking-[0.05em] ${mode === item ? "bg-ink text-canvas" : "bg-paper text-ink"}`}>{item === "append" ? "Append" : "Replace all"}</button>
-                  ))}
-                </div>
-              </fieldset>
-            </div>
-
-            <div className="mt-6 overflow-x-auto border border-ink bg-paper">
-              <table className="w-full min-w-[720px] border-collapse text-left text-[12px]">
-                <thead>
-                  <tr>
-                    {headers.map((header) => (
-                      <th key={header} className="border-b border-r border-ink p-3 font-normal last:border-r-0">
-                        <p className="micro-label mb-2 text-ash">{header}</p>
-                        <select value={mapping[header] ?? "skip"} onChange={(event) => setMapping((current) => ({ ...current, [header]: event.target.value as ColumnKey }))} className="h-10 w-full border border-pewter bg-paper px-2 outline-none focus:border-accent">
-                          {FIELD_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                        </select>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {preview.map((row, rowIndex) => (
-                    <tr key={rowIndex} className="border-b border-pewter last:border-b-0">
-                      {headers.map((header) => <td key={header} className="max-w-[280px] border-r border-pewter px-3 py-3 font-script last:border-r-0">{row[header]}</td>)}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-6 flex flex-col justify-between gap-4 border-t border-pewter pt-5 sm:flex-row sm:items-center">
-              <p className="max-w-[56ch] text-[12px] leading-5 text-ash">Variant cells are normalized into arrays in JSON. Existing commas are treated as spelling separators.</p>
-              <div className="flex gap-2">
-                <button type="button" onClick={resetUpload} className="min-h-11 border border-ink px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em]">Back</button>
-                <button type="button" disabled={busy} onClick={() => void commitImport()} className="min-h-11 bg-accent px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] text-on-accent hover:bg-[var(--index-accent-dark)] disabled:opacity-50">{busy ? "Writing…" : "Import + write JSON →"}</button>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {step === "done" ? (
-          <section className="mt-10 border border-ink bg-paper">
-            <div className="h-2 bg-accent" />
-            <div className="grid gap-8 px-6 py-10 md:grid-cols-[1fr_auto] md:items-end md:px-10">
-              <div>
-                <p className="micro-label text-success">Publish complete</p>
-                <h2 className="mt-4 text-[clamp(38px,5vw,64px)] font-semibold tracking-[-0.04em]">Catalog and JSON agree.</h2>
-                <p className="mt-4 max-w-[62ch] text-[14px] leading-6 text-ash">{message}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => { resetUpload(); setMessage(""); }} className="min-h-11 bg-ink px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] text-canvas hover:bg-accent hover:text-on-accent">Import another</button>
-                <button type="button" disabled={busy} onClick={() => void undoImport()} className="min-h-11 border border-ink px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] disabled:opacity-50">Undo import</button>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {error ? <p role="alert" className="mt-5 border border-accent px-4 py-3 text-[12px] text-accent">{error}</p> : null}
-        {message && step !== "done" ? <p role="status" className="mt-5 border-l-4 border-success bg-paper px-4 py-3 text-[12px] text-success">{message}</p> : null}
-
-        <section className="mt-16 border-t border-ink pt-8" aria-labelledby="suggestion-queue-title">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <p className="micro-label text-ash">Community intake / pending review</p>
-              <h2 id="suggestion-queue-title" className="mt-3 text-[32px] font-semibold tracking-[-0.035em]">
-                Suggestion docket.
-              </h2>
-              <p className="mt-3 max-w-[62ch] text-[13px] leading-6 text-ash">
-                Word contributions are verified before publishing. Bug reports stay private and can be resolved from this same docket.
-              </p>
-            </div>
-            <div className="min-w-28 border border-ink bg-paper px-4 py-3 text-right">
-              <p className="font-display text-[28px] font-semibold leading-none">{String(suggestions.length).padStart(2, "0")}</p>
-              <p className="micro-label mt-2 text-ash">Pending</p>
-            </div>
-          </div>
-
-          <div className="mt-5 border border-ink bg-paper">
-            {suggestions.length ? suggestions.map((suggestion, index) => {
-              const script = suggestion.kind === "word" && suggestion.source !== "english";
-              return (
-                <article
-                  key={suggestion.id}
-                  className="grid border-b border-pewter last:border-b-0 md:grid-cols-[86px_minmax(0,1fr)_180px]"
-                >
-                  <div className="border-b border-pewter px-4 py-5 md:border-b-0 md:border-r">
-                    <p className="font-display text-[20px] font-semibold">{String(index + 1).padStart(2, "0")}</p>
-                    <p className="micro-label mt-2 text-stone">#{suggestion.id}</p>
-                  </div>
-                  <div className="min-w-0 border-b border-pewter px-4 py-5 md:border-b-0 md:border-r md:px-6">
-                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                      <p
-                        lang={suggestion.source === "mon" ? "mnw" : suggestion.source === "burmese" ? "my" : "en"}
-                        className={`text-[28px] font-semibold text-ink ${script ? "font-script leading-[1.5]" : "tracking-[-0.03em]"}`}
-                      >
-                        {suggestion.text}
-                      </p>
-                      <p className="micro-label text-accent">{suggestion.kind === "bug" ? "Bug report" : suggestion.source}</p>
-                    </div>
-                    {suggestion.kind === "word" ? (
-                      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-ash">
-                        {suggestion.suggestedMon ? <span className="font-script"><b className="font-sans text-[9px] uppercase tracking-[0.07em] text-stone">Mon</b> {suggestion.suggestedMon}</span> : null}
-                        {suggestion.suggestedBurmese ? <span className="font-script"><b className="font-sans text-[9px] uppercase tracking-[0.07em] text-stone">Burmese</b> {suggestion.suggestedBurmese}</span> : null}
-                        {suggestion.suggestedEnglish ? <span><b className="text-[9px] uppercase tracking-[0.07em] text-stone">English</b> {suggestion.suggestedEnglish}</span> : null}
-                      </div>
-                    ) : null}
-                    {suggestion.context ? <p className={`mt-3 text-[12px] text-ash ${/[\u1000-\u109f\uaa60-\uaa7f]/u.test(suggestion.context) ? "font-script" : ""}`}>{suggestion.kind === "bug" ? "Page" : "Full-name context"}: {suggestion.context}</p> : null}
-                    {suggestion.note ? <p className="mt-2 whitespace-pre-wrap text-[12px] leading-5 text-ash">{suggestion.kind === "bug" ? "Details" : "User note"}: {suggestion.note}</p> : null}
-                    {suggestion.contributorName ? <p className="mt-2 text-[11px] text-ink">{suggestion.kind === "bug" ? "Reporter" : "Requested credit"}: <b>{suggestion.contributorName}</b></p> : null}
-                    <p className="mt-3 text-[10px] uppercase tracking-[0.08em] text-stone">
-                      Received {new Date(suggestion.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 px-4 py-5 md:flex-col md:items-stretch md:justify-center">
-                    {suggestion.kind === "bug" ? (
-                      <button type="button" onClick={() => void resolveBugReport(suggestion.id)} className="min-h-11 flex-1 bg-accent px-4 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-on-accent hover:bg-[var(--index-accent-dark)]">Mark resolved ✓</button>
-                    ) : (
-                      <button type="button" onClick={() => reviewSuggestion(suggestion)} className="min-h-11 flex-1 bg-ink px-4 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-canvas hover:bg-accent hover:text-on-accent">Review →</button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => void rejectPendingSuggestion(suggestion.id)}
-                      className="min-h-11 flex-1 border border-pewter px-4 font-display text-[11px] font-semibold uppercase tracking-[0.06em] text-ash hover:border-accent hover:text-accent"
-                    >
-                      {suggestion.kind === "bug" ? "Dismiss" : "Reject"}
-                    </button>
-                  </div>
-                </article>
-              );
-            }) : (
-              <div className="grid min-h-32 place-items-center px-5 py-10 text-center">
+      {active === "reviews" && canManage ? (
+        <>
+          <SectionHeading eyebrow="Community intake / pending" title="Review queue." copy="Verify proposed spellings before publication. Bug reports stay private and can be marked resolved here." />
+          <div className="border border-[#dedfdb] bg-white">
+            {suggestions.length ? suggestions.map((suggestion, index) => (
+              <article key={suggestion.id} className="grid gap-4 border-b border-[#e2e3df] p-5 last:border-b-0 md:grid-cols-[56px_1fr_auto] md:items-center">
+                <span className="font-mono text-[11px] text-[#878883]">{String(index + 1).padStart(2, "0")}</span>
                 <div>
-                  <p className="font-display text-[22px] font-semibold uppercase">Docket clear.</p>
-                  <p className="mt-2 text-[12px] text-ash">No word contributions or bug reports are waiting.</p>
+                  <div className="flex flex-wrap items-center gap-2"><span className={`px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] ${suggestion.kind === "bug" ? "bg-[#fff0eb] text-[#a54020]" : "bg-[#efefec] text-[#555652]"}`}>{suggestion.kind === "bug" ? "Bug report" : suggestion.source}</span><span className="text-[10px] text-[#8a8b86]">#{suggestion.id}</span></div>
+                  <p lang={suggestion.source === "mon" ? "mnw" : suggestion.source === "burmese" ? "my" : "en"} className={`mt-3 text-[18px] font-semibold ${suggestion.source !== "english" ? "font-script" : ""}`}>{suggestion.text}</p>
+                  <p className="mt-1 text-[11px] text-[#777873]">{suggestion.contributorName ? `From ${suggestion.contributorName}` : "Anonymous submission"}{suggestion.note ? ` · ${suggestion.note}` : ""}</p>
                 </div>
-              </div>
-            )}
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  {suggestion.kind === "bug" ? <button type="button" onClick={() => void reviewAction(suggestion.id, "resolve")} className={primaryButton}><Bug className="h-3.5 w-3.5" /> Resolve</button> : <><button type="button" onClick={() => void reviewAction(suggestion.id, "reject")} className={button}>Reject</button><button type="button" onClick={() => openReview(suggestion)} className={primaryButton}>Review <ArrowRight className="h-3.5 w-3.5" /></button></>}
+                </div>
+              </article>
+            )) : <div className="px-6 py-20 text-center"><Check className="mx-auto h-6 w-6 text-[#2b7a51]" /><h2 className="mt-4 text-[22px] font-semibold">Queue clear.</h2><p className="mt-2 text-[12px] text-[#777873]">No suggestions or bug reports are waiting.</p></div>}
           </div>
-        </section>
+        </>
+      ) : null}
 
-        <section className="mt-16 border-t border-ink pt-8">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <p className="micro-label text-ash">Current database</p>
-              <h2 className="mt-3 text-[32px] font-semibold tracking-[-0.035em]">{count} catalog names</h2>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <button
-                type="button"
-                aria-expanded={addingWord}
-                aria-controls="manual-word-entry"
-                onClick={() => { setAddingWord((current) => !current); setManualError(""); setManualMessage(""); }}
-                className={`min-h-11 border border-ink px-5 font-display text-[11px] font-semibold uppercase tracking-[0.06em] ${addingWord ? "bg-ink text-canvas" : "bg-paper text-ink hover:bg-ink hover:text-canvas"}`}
-              >
-                {addingWord ? "Close entry ×" : "Add catalog word +"}
-              </button>
-              <label className="micro-label text-ash">
-                Filter catalog
-                <input value={query} onChange={(event) => { setQuery(event.target.value); void loadNames(event.target.value); }} placeholder="Name or note…" className="mt-2 h-11 w-full min-w-[280px] border border-ink bg-paper px-3 font-sans text-[14px] normal-case tracking-normal outline-none placeholder:text-stone focus:border-accent sm:w-[340px]" />
-              </label>
-            </div>
+      {active === "import" && canManage ? (
+        <>
+          <SectionHeading eyebrow="Data pipeline / controlled write" title="Import desk." copy="Upload a CSV or spreadsheet, map each source column, then append to or replace the catalog. A replace can be undone once." actions={step !== "upload" ? <button type="button" onClick={resetUpload} className={button}>Start over</button> : undefined} />
+          <div className="mb-5 grid border-l border-t border-[#dedfdb] sm:grid-cols-3">
+            {(["upload", "map", "done"] as ImportStep[]).map((item, index) => <div key={item} className={`border-b border-r border-[#dedfdb] px-4 py-3 ${step === item ? "bg-[#141415] text-white" : "bg-white"}`}><p className="font-mono text-[9px] uppercase tracking-[0.11em] opacity-55">0{index + 1}</p><p className="mt-1 text-[12px] font-medium capitalize">{item === "map" ? "Map columns" : item}</p></div>)}
           </div>
+          {step === "upload" ? <label onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(event) => { event.preventDefault(); setDragOver(false); const next = event.dataTransfer.files[0]; if (next) void parseFile(next); }} className={`flex min-h-[360px] cursor-pointer flex-col items-center justify-center border border-dashed bg-white px-6 text-center ${dragOver ? "border-[var(--index-accent)] bg-[#fff8f5]" : "border-[#747570]"}`}><Upload className="h-6 w-6" /><h2 className="mt-6 text-[32px] font-semibold tracking-[-0.035em]">Drop .csv or .xlsx</h2><p className="mt-3 max-w-[48ch] text-[12px] leading-5 text-[#73746f]">A header row is required. Columns are detected automatically and can be corrected before anything is written.</p><span className={`mt-6 ${primaryButton}`}>{busy ? "Reading…" : "Choose source file"}</span><input type="file" accept=".csv,.xlsx,.xls,.txt" className="sr-only" onChange={(event) => { const next = event.target.files?.[0]; if (next) void parseFile(next); }} /></label> : null}
+          {step === "map" ? <section className="border border-[#dedfdb] bg-white"><div className="flex flex-col gap-4 border-b border-[#dedfdb] p-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#82837e]">{rows.length} source rows</p><h2 className="mt-2 text-[22px] font-semibold">{filename}</h2></div><div className="flex border border-[#bfc0bc]">{(["append", "replace"] as ImportMode[]).map((item) => <button key={item} type="button" onClick={() => setMode(item)} className={`h-10 px-4 text-[11px] font-medium capitalize ${mode === item ? "bg-[#141415] text-white" : "bg-white"}`}>{item}</button>)}</div></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-[12px]"><thead><tr>{headers.map((header) => <th key={header} className="border-b border-r border-[#dedfdb] p-3 last:border-r-0"><span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.1em] text-[#777873]">{header}</span><select value={mapping[header] ?? "skip"} onChange={(event) => setMapping((current) => ({ ...current, [header]: event.target.value as ColumnKey }))} className="h-9 w-full border border-[#c6c7c3] bg-white px-2">{FIELD_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></th>)}</tr></thead><tbody>{preview.map((row, index) => <tr key={index} className="border-b border-[#e6e7e3] last:border-b-0">{headers.map((header) => <td key={header} className="max-w-[260px] border-r border-[#e6e7e3] px-3 py-3 font-script last:border-r-0">{row[header]}</td>)}</tr>)}</tbody></table></div><div className="flex justify-end border-t border-[#dedfdb] p-4"><button type="button" disabled={busy} onClick={() => void commitImport()} className={primaryButton}>{busy ? "Writing…" : "Import and publish"} <ArrowRight className="h-3.5 w-3.5" /></button></div></section> : null}
+          {step === "done" ? <section className="border border-[#dedfdb] bg-white p-8 md:p-12"><span className="inline-flex h-10 w-10 items-center justify-center bg-[#e8f5ed] text-[#216240]"><Check className="h-5 w-5" /></span><h2 className="mt-7 text-[36px] font-semibold tracking-[-0.04em]">Catalog and JSON agree.</h2><p className="mt-3 max-w-[60ch] text-[13px] leading-6 text-[#686965]">{message}</p><div className="mt-7 flex gap-2"><button type="button" onClick={resetUpload} className={primaryButton}>Import another</button><button type="button" disabled={busy} onClick={() => void undoImport()} className={button}>Undo last import</button></div></section> : null}
+          {file && step === "upload" ? <p className="mt-3 text-[11px] text-[#777873]">Selected: {file.name}</p> : null}
+        </>
+      ) : null}
 
-          {addingWord ? (
-            <SpotlightCard className="mt-5 border border-ink bg-paper" spotlightColor="color-mix(in srgb, var(--index-accent) 9%, transparent)">
-              <form id="manual-word-entry" onSubmit={addManualName}>
-                <div className="grid border-b border-ink sm:grid-cols-[120px_1fr]">
-                  <div className="border-b border-ink bg-ink px-5 py-5 text-canvas sm:border-b-0 sm:border-r">
-                    <p className="micro-label text-canvas/60">Manual entry</p>
-                    <p className="mt-7 font-display text-[34px] font-semibold leading-none">+01</p>
-                  </div>
-                  <div className="px-5 py-6 sm:px-7">
-                    <h3 className="text-[28px] font-semibold tracking-[-0.03em]">Add one verified word.</h3>
-                    <p className="mt-2 max-w-[65ch] text-[12px] leading-5 text-ash">Enter the matching forms in all three scripts. Use commas for alternate spellings; the first value becomes the default.</p>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-3">
-                  {([
-                    ["mon", "01 / Mon variants", true],
-                    ["burmese", "02 / Burmese variants", true],
-                    ["english", "03 / English variants", false],
-                  ] as const).map(([key, label, script], index) => (
-                    <label key={key} className={`px-5 py-5 text-ash md:px-6 ${index > 0 ? "border-t border-pewter md:border-l md:border-t-0" : ""}`}>
-                      <span className="micro-label">{label}</span>
-                      <input
-                        required
-                        autoFocus={index === 0}
-                        lang={key === "mon" ? "mnw" : key === "burmese" ? "my" : "en"}
-                        value={manualName[key]}
-                        onChange={(event) => setManualName({ ...manualName, [key]: event.target.value })}
-                        placeholder={script ? "စာလုံးပေါင်း, မူကွဲ" : "Spelling, variant"}
-                        className={`mt-3 h-14 w-full border border-ink bg-paper px-3 text-[18px] font-normal text-ink outline-none placeholder:text-stone focus:border-accent ${script ? "font-script" : "font-sans"}`}
-                      />
-                    </label>
-                  ))}
-                </div>
-
-                <div className="border-t border-pewter px-5 py-5 sm:px-6">
-                  <div className="grid gap-4 md:grid-cols-2">
-                  <label className="micro-label block text-ash">Catalog notes
-                    <textarea
-                      value={manualName.notes ?? ""}
-                      onChange={(event) => setManualName({ ...manualName, notes: event.target.value })}
-                      rows={2}
-                      placeholder="Source, pronunciation, or verification note…"
-                      className="mt-2 w-full resize-y border border-pewter bg-paper px-3 py-3 font-sans text-[14px] font-normal normal-case tracking-normal text-ink outline-none placeholder:text-stone focus:border-accent"
-                    />
-                  </label>
-                  <label className="micro-label block text-ash">Contributor credit
-                    <input value={manualName.credit ?? ""} onChange={(event) => setManualName({ ...manualName, credit: event.target.value })} placeholder="Optional public name" className="mt-2 h-12 w-full border border-pewter bg-paper px-3 font-sans text-[14px] font-normal normal-case tracking-normal text-ink outline-none placeholder:text-stone focus:border-accent" />
-                  </label>
-                  </div>
-                  <div className="mt-5 flex flex-col gap-3 border-t border-pewter pt-5 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-[11px] uppercase tracking-[0.08em] text-stone">Destination / SQLite + data/names.json</p>
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => { setAddingWord(false); setManualError(""); }} className="min-h-11 border border-ink px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em]">Cancel</button>
-                      <button type="submit" disabled={busy} className="min-h-11 bg-accent px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] text-on-accent hover:bg-[var(--index-accent-dark)] disabled:opacity-50">{busy ? "Adding…" : "Add word + write JSON →"}</button>
-                    </div>
-                  </div>
-                  {manualError ? <p role="alert" className="mt-4 border-t border-accent pt-3 text-[12px] text-accent">{manualError}</p> : null}
-                </div>
-              </form>
-            </SpotlightCard>
-          ) : null}
-
-          {manualMessage ? <p role="status" className="mt-5 border-l-4 border-success bg-paper px-4 py-3 text-[12px] text-success">{manualMessage}</p> : null}
-          {catalogError ? <p role="alert" className="mt-5 border border-accent px-4 py-3 text-[12px] text-accent">{catalogError}</p> : null}
-          {catalogMessage ? <p role="status" className="mt-5 border-l-4 border-success bg-paper px-4 py-3 text-[12px] text-success">{catalogMessage}</p> : null}
-
-          <div className="mt-5 overflow-x-auto border border-ink bg-paper">
-            <table className="w-full min-w-[840px] border-collapse text-left text-[13px]">
-              <thead className="bg-ink text-canvas">
-                <tr>{["Mon", "Burmese", "English", "Notes", "Credit", ""].map((label, index) => <th key={`${label}-${index}`} className="border-r border-canvas/20 px-3 py-3 font-display text-[11px] font-semibold uppercase tracking-[0.06em] last:border-r-0">{label}</th>)}</tr>
-              </thead>
-              <tbody>
-                {names.map((row) => (
-                  <tr key={row.id} className="border-b border-pewter last:border-b-0 hover:bg-mist/60">
-                    <td className="border-r border-pewter px-3 py-3 font-script">{row.monVariants.join(" · ")}</td>
-                    <td className="border-r border-pewter px-3 py-3 font-script">{row.burmeseVariants.join(" · ")}</td>
-                    <td className="border-r border-pewter px-3 py-3">{row.englishVariants.join(" · ")}</td>
-                    <td className="max-w-[280px] border-r border-pewter px-3 py-3 text-ash">{row.notes}</td>
-                    <td className="border-r border-pewter px-3 py-3 text-ash">{row.credit || "—"}</td>
-                    <td className="px-3 py-3">
-                      <div className="flex gap-3">
-                        <button type="button" disabled={deletingNameId === row.id} onClick={() => editRow(row)} className="micro-label border-b border-ink pb-1 disabled:cursor-not-allowed disabled:opacity-40">Edit</button>
-                        <button type="button" disabled={deletingNameId === row.id} onClick={() => void removeName(row)} className="micro-label border-b border-transparent pb-1 text-ash hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40" aria-label={`Delete ${row.englishVariants[0] || row.burmeseVariants[0] || row.monVariants[0] || `name ${row.id}`}`}>
-                          {deletingNameId === row.id ? "Deleting…" : "Delete"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {active === "team" && isAdmin ? (
+        <>
+          <SectionHeading eyebrow="Clerk users / public metadata" title="Team and roles." copy="Admins control access levels. Managers operate imports and reviews; editors maintain entries without destructive permissions." actions={<a href="https://dashboard.clerk.com/" target="_blank" rel="noreferrer" className={`${button} text-[#252624] no-underline`}>Open Clerk dashboard</a>} />
+          <div className="overflow-x-auto border border-[#dedfdb] bg-white">
+            <table className="w-full min-w-[720px] text-left text-[13px]"><thead><tr className="border-b border-[#dedfdb] bg-[#f4f4f1]">{["Teammate", "Email", "Role", "Last sign-in"].map((label) => <th key={label} className="h-10 px-4 font-mono text-[9px] font-medium uppercase tracking-[0.11em] text-[#73746f]">{label}</th>)}</tr></thead><tbody>{team.map((user) => <tr key={user.id} className="border-b border-[#e6e7e3] last:border-b-0"><td className="px-4 py-3"><div className="flex items-center gap-3"><Image src={user.imageUrl} alt="" width={32} height={32} unoptimized className="h-8 w-8 bg-[#efefec] object-cover" /><span className="font-medium">{user.name}{user.id === identity.userId ? <span className="ml-2 text-[10px] text-[#858681]">You</span> : null}</span></div></td><td className="px-4 py-3 text-[#666762]">{user.email}</td><td className="px-4 py-3"><select value={user.role} disabled={roleSaving === user.id || user.id === identity.userId} onChange={(event) => void changeRole(user.id, event.target.value as AdminRole)} className="h-9 min-w-32 border border-[#c8c9c5] bg-white px-2 text-[12px] capitalize disabled:bg-[#f1f1ee]">{(["admin", "manager", "editor"] as AdminRole[]).map((role) => <option key={role} value={role}>{role}</option>)}</select></td><td className="px-4 py-3 text-[12px] text-[#777873]">{user.lastSignInAt ? new Date(user.lastSignInAt).toLocaleDateString() : "Never"}</td></tr>)}</tbody></table>
           </div>
-        </section>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">{[{ role: "Admin", detail: "Full access, branding, and roles" }, { role: "Manager", detail: "Catalog, imports, delete, and reviews" }, { role: "Editor", detail: "Catalog create, edit, and export" }].map((item) => <article key={item.role} className="border border-[#dedfdb] bg-white p-4"><p className="font-mono text-[10px] uppercase tracking-[0.11em] text-[#777873]">{item.role}</p><p className="mt-2 text-[12px] text-[#555652]">{item.detail}</p></article>)}</div>
+        </>
+      ) : null}
 
-        {reviewing ? (
-          <div role="dialog" aria-modal="true" aria-labelledby="review-suggestion-title" className="theme-overlay fixed inset-0 z-30 flex items-center justify-center p-4">
-            <form onSubmit={approvePendingSuggestion} className="max-h-[calc(100vh-32px)] w-full max-w-2xl overflow-y-auto border border-ink bg-canvas">
-              <div className="grid border-b border-ink sm:grid-cols-[110px_1fr_auto] sm:items-stretch">
-                <div className="bg-ink px-5 py-4 text-canvas">
-                  <p className="micro-label text-canvas/60">Docket</p>
-                  <p className="mt-2 font-display text-[24px] font-semibold">#{reviewing.suggestion.id}</p>
-                </div>
-                <div className="px-5 py-4">
-                  <p id="review-suggestion-title" className="font-display text-[20px] font-semibold uppercase">Verify suggested spelling</p>
-                  <p className="mt-1 text-[11px] text-ash">Source submitted as {reviewing.suggestion.source}</p>
-                </div>
-                <button type="button" onClick={() => { setReviewing(null); setError(""); }} className="absolute right-6 top-5 text-[24px] sm:static sm:min-w-16 sm:border-l sm:border-pewter" aria-label="Close review dialog">×</button>
-              </div>
+      {active === "branding" && isAdmin ? <><SectionHeading eyebrow="Site identity / global" title="Brand settings." copy="Update the public name, tagline, accent, logo, and favicon. These changes affect the live converter as well as the admin shell." /><BrandSettings /></> : null}
 
-              <div className="border-b border-pewter bg-paper px-5 py-5">
-                <p className="micro-label text-stone">Submitted form</p>
-                <p
-                  lang={reviewing.suggestion.source === "mon" ? "mnw" : reviewing.suggestion.source === "burmese" ? "my" : "en"}
-                  className={`mt-2 text-[32px] font-semibold ${reviewing.suggestion.source !== "english" ? "font-script leading-[1.5]" : "tracking-[-0.03em]"}`}
-                >
-                  {reviewing.suggestion.text}
-                </p>
-                {reviewing.suggestion.context ? <p className="mt-2 text-[12px] text-ash">Full-name context: {reviewing.suggestion.context}</p> : null}
-              </div>
+      {(adding || editing) ? (
+        <div role="dialog" aria-modal="true" aria-labelledby="catalog-form-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
+          <form onSubmit={saveName} className="max-h-[calc(100vh-32px)] w-full max-w-2xl overflow-y-auto border border-[#222] bg-[#fafaf8]">
+            <div className="flex items-center justify-between border-b border-[#d9dad6] px-5 py-4"><div><p className="font-mono text-[9px] uppercase tracking-[0.11em] text-[#7d7e79]">SQLite + JSON</p><h2 id="catalog-form-title" className="mt-1 text-[22px] font-semibold">{editing ? "Edit catalog entry" : "Add verified word"}</h2></div><button type="button" onClick={() => { setAdding(false); setEditing(null); resetNotices(); }} className="p-2 text-[20px]" aria-label="Close">×</button></div>
+            <div className="grid gap-5 p-5 md:grid-cols-2">{(["mon", "burmese", "english"] as const).map((key) => <label key={key} className={key === "english" ? "md:col-span-2" : ""}><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">{key} variants</span><input required lang={key === "mon" ? "mnw" : key === "burmese" ? "my" : "en"} value={(editing ?? manualName)[key]} onChange={(event) => editing ? setEditing({ ...editing, [key]: event.target.value }) : setManualName({ ...manualName, [key]: event.target.value })} placeholder="Separate alternate spellings with commas" className={`${field} ${key !== "english" ? "font-script text-[16px]" : ""}`} /></label>)}<label className="md:col-span-2"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">Notes</span><textarea rows={3} value={(editing ?? manualName).notes ?? ""} onChange={(event) => editing ? setEditing({ ...editing, notes: event.target.value }) : setManualName({ ...manualName, notes: event.target.value })} className={`${field} h-auto py-3`} /></label><label className="md:col-span-2"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">Contributor credit</span><input value={(editing ?? manualName).credit ?? ""} onChange={(event) => editing ? setEditing({ ...editing, credit: event.target.value }) : setManualName({ ...manualName, credit: event.target.value })} className={field} /></label>{error ? <p role="alert" className="md:col-span-2 text-[12px] text-[#a83e1c]">{error}</p> : null}</div>
+            <div className="flex justify-end gap-2 border-t border-[#d9dad6] p-4"><button type="button" onClick={() => { setAdding(false); setEditing(null); resetNotices(); }} className={button}>Cancel</button><button type="submit" disabled={busy} className={primaryButton}>{busy ? "Saving…" : "Save and publish"}</button></div>
+          </form>
+        </div>
+      ) : null}
 
-              <div className="space-y-5 px-5 py-6 sm:px-7">
-                <p className="text-[12px] leading-5 text-ash">Complete all three catalog forms. Separate alternate spellings with commas; the first spelling becomes the default.</p>
-                {([
-                  ["mon", "Mon variants", true],
-                  ["burmese", "Burmese variants", true],
-                  ["english", "English variants", false],
-                ] as const).map(([key, label, script]) => (
-                  <label key={key} className="micro-label block text-ash">{label}
-                    <input
-                      required
-                      value={reviewing[key]}
-                      onChange={(event) => setReviewing({ ...reviewing, [key]: event.target.value })}
-                      className={`mt-2 h-13 w-full border border-ink bg-paper px-3 text-[18px] font-normal normal-case tracking-normal outline-none focus:border-accent ${script ? "font-script" : "font-sans"}`}
-                    />
-                  </label>
-                ))}
-                <label className="micro-label block text-ash">Catalog notes
-                  <textarea value={reviewing.notes} onChange={(event) => setReviewing({ ...reviewing, notes: event.target.value })} rows={3} className="mt-2 w-full resize-y border border-ink bg-paper px-3 py-3 font-sans text-[14px] font-normal normal-case tracking-normal outline-none focus:border-accent" />
-                </label>
-                <label className="micro-label block text-ash">Public contributor credit
-                  <input maxLength={80} value={reviewing.credit} onChange={(event) => setReviewing({ ...reviewing, credit: event.target.value })} placeholder="Optional name shown after approval" className="mt-2 h-12 w-full border border-ink bg-paper px-3 font-sans text-[14px] font-normal normal-case tracking-normal outline-none focus:border-accent" />
-                </label>
-                {error ? <p role="alert" className="border-t border-accent pt-3 text-[12px] text-accent">{error}</p> : null}
-              </div>
-
-              <div className="flex flex-col-reverse gap-2 border-t border-ink px-5 py-4 sm:flex-row sm:justify-end">
-                <button type="button" onClick={() => { setReviewing(null); setError(""); }} className="min-h-11 border border-ink px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em]">Return to docket</button>
-                <button type="submit" disabled={busy} className="min-h-11 bg-accent px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] text-on-accent disabled:opacity-50">{busy ? "Adding…" : "Approve + add to catalog →"}</button>
-              </div>
-            </form>
-          </div>
-        ) : null}
-
-        {editing ? (
-          <div role="dialog" aria-modal="true" aria-labelledby="edit-name-title" className="theme-overlay fixed inset-0 z-20 flex items-center justify-center p-4">
-            <form onSubmit={saveEdit} className="w-full max-w-xl border border-ink bg-canvas">
-              <div className="flex items-center justify-between border-b border-ink px-5 py-4">
-                <h3 id="edit-name-title" className="font-display text-[22px] font-semibold uppercase">Edit catalog name</h3>
-                <button type="button" disabled={savingEdit} onClick={() => { setEditing(null); setEditingError(""); }} className="text-[22px] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Close edit dialog">×</button>
-              </div>
-              <div className="space-y-5 px-5 py-6">
-                <p className="text-[12px] leading-5 text-ash">Separate alternate spellings with commas. The first value is the default shown to users.</p>
-                {([
-                  ["mon", "Mon variants", true],
-                  ["burmese", "Burmese variants", true],
-                  ["english", "English variants", false],
-                ] as const).map(([key, label, script]) => (
-                  <label key={key} className="micro-label block text-ash">{label}
-                    <input required lang={key === "mon" ? "mnw" : key === "burmese" ? "my" : "en"} value={editing[key]} onChange={(event) => setEditing({ ...editing, [key]: event.target.value })} className={`mt-2 h-12 w-full border border-ink bg-paper px-3 text-[16px] font-normal normal-case tracking-normal outline-none focus:border-accent ${script ? "font-script" : "font-sans"}`} />
-                  </label>
-                ))}
-                <label className="micro-label block text-ash">Notes
-                  <textarea value={editing.notes} onChange={(event) => setEditing({ ...editing, notes: event.target.value })} rows={3} className="mt-2 w-full resize-y border border-ink bg-paper px-3 py-3 font-sans text-[14px] font-normal normal-case tracking-normal outline-none focus:border-accent" />
-                </label>
-                <label className="micro-label block text-ash">Contributor credit
-                  <input maxLength={80} value={editing.credit} onChange={(event) => setEditing({ ...editing, credit: event.target.value })} className="mt-2 h-12 w-full border border-ink bg-paper px-3 font-sans text-[14px] font-normal normal-case tracking-normal outline-none focus:border-accent" />
-                </label>
-                {editingError ? <p role="alert" className="border-t border-accent pt-3 text-[12px] text-accent">{editingError}</p> : null}
-              </div>
-              <div className="flex justify-end gap-2 border-t border-ink px-5 py-4">
-                <button type="button" disabled={savingEdit} onClick={() => { setEditing(null); setEditingError(""); }} className="min-h-11 border border-ink px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] disabled:cursor-not-allowed disabled:opacity-40">Cancel</button>
-                <button type="submit" disabled={savingEdit} className="min-h-11 bg-accent px-5 font-display text-[11px] font-semibold uppercase tracking-[0.05em] text-on-accent disabled:cursor-not-allowed disabled:opacity-50">{savingEdit ? "Saving…" : "Save + rewrite JSON"}</button>
-              </div>
-            </form>
-          </div>
-        ) : null}
-      </main>
-    </div>
+      {reviewing ? (
+        <div role="dialog" aria-modal="true" aria-labelledby="review-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"><form onSubmit={approveSuggestion} className="max-h-[calc(100vh-32px)] w-full max-w-2xl overflow-y-auto border border-[#222] bg-[#fafaf8]"><div className="flex items-center justify-between border-b border-[#d9dad6] px-5 py-4"><div><p className="font-mono text-[9px] uppercase tracking-[0.11em] text-[#7d7e79]">Suggestion #{reviewing.suggestion.id}</p><h2 id="review-title" className="mt-1 text-[22px] font-semibold">Verify before publishing</h2></div><button type="button" onClick={() => { setReviewing(null); resetNotices(); }} className="p-2 text-[20px]" aria-label="Close">×</button></div><div className="space-y-5 p-5"><div className="border border-[#dedfdb] bg-white p-4"><p className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#777873]">Submitted form</p><p className={`mt-2 text-[24px] font-semibold ${reviewing.suggestion.source !== "english" ? "font-script" : ""}`}>{reviewing.suggestion.text}</p></div>{(["mon", "burmese", "english"] as const).map((key) => <label key={key} className="block"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">{key} variants</span><input required value={reviewing[key]} onChange={(event) => setReviewing({ ...reviewing, [key]: event.target.value })} className={`${field} ${key !== "english" ? "font-script text-[16px]" : ""}`} /></label>)}<label className="block"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">Catalog notes</span><textarea rows={3} value={reviewing.notes} onChange={(event) => setReviewing({ ...reviewing, notes: event.target.value })} className={`${field} h-auto py-3`} /></label><label className="block"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">Contributor credit</span><input value={reviewing.credit} onChange={(event) => setReviewing({ ...reviewing, credit: event.target.value })} className={field} /></label>{error ? <p role="alert" className="text-[12px] text-[#a83e1c]">{error}</p> : null}</div><div className="flex justify-end gap-2 border-t border-[#d9dad6] p-4"><button type="button" onClick={() => { setReviewing(null); resetNotices(); }} className={button}>Cancel</button><button type="submit" disabled={busy} className={primaryButton}>{busy ? "Publishing…" : "Approve and publish"}</button></div></form></div>
+      ) : null}
+    </AppShell1>
   );
 }

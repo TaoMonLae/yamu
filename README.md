@@ -45,15 +45,20 @@ Open these pages:
 - About: <http://localhost:3002/about>
 - Admin: <http://localhost:3002/admin>
 
-The development admin password is `change-me`. Change it before sharing or deploying the app.
+Admin access uses Clerk. Sign up through `/sign-up`; the first Clerk user is bootstrapped as an administrator, and later users begin as editors until an administrator changes their role.
 
 Service-worker registration is enabled only in production. After running `npm run build` and `npm start`, supported browsers can install Yamu from `localhost` or an HTTPS deployment. Public pages use network-first caching, while admin and API requests are never cached.
 
 ## Environment variables
 
 ```dotenv
-ADMIN_PASSWORD=change-me
-ADMIN_SESSION_SECRET=replace-with-a-long-random-string
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_replace_me
+CLERK_SECRET_KEY=sk_test_replace_me
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/admin
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/admin
+REACTBITS_LICENSE_KEY=replace_me
 APP_ORIGINS=http://localhost:3002
 # TRUST_CLOUDFLARE_PROXY=true
 PORT=3002
@@ -61,7 +66,7 @@ PORT=3002
 
 `DATA_DIR` is optional. When it is not set, Yamu stores its database and JSON catalog in the repository's `data` directory. Set it to a persistent writable directory in production.
 
-In production, `ADMIN_PASSWORD` must be at least 12 characters and `ADMIN_SESSION_SECRET` must be a separate value of at least 32 bytes. Set `APP_ORIGINS` to the exact public HTTPS origins, separated by commas when needed. For this deployment, use `https://yamumon.com,https://www.yamumon.com`. Set `TRUST_CLOUDFLARE_PROXY=true` only when direct access to the origin is blocked; this lets rate limits use Cloudflare's authenticated visitor-IP header.
+Use Clerk production keys when deploying; development keys have strict usage limits. `REACTBITS_LICENSE_KEY` is used only by the shadcn registry when installing licensed source components and is not needed by the running app. Set `APP_ORIGINS` to the exact public HTTPS origins, separated by commas when needed. For this deployment, use `https://yamumon.com,https://www.yamumon.com`. Set `TRUST_CLOUDFLARE_PROXY=true` only when direct access to the origin is blocked; this lets rate limits use Cloudflare's authenticated visitor-IP header.
 
 When a new database is created, Yamu initializes it from the repository's portable `data/names.json` catalog. Set `INITIAL_CATALOG_PATH` only when that file lives somewhere else. If no portable catalog is available, Yamu falls back to the small sample seed.
 
@@ -92,6 +97,13 @@ The admin page also supports:
 - Publishing optional contributor credit with approved entries
 - Resolving or dismissing private bug reports from the shared docket
 - Downloading the catalog as JSON or CSV
+- Clerk-backed team roles: admin, manager, and editor
+
+Role permissions follow least privilege:
+
+- `admin`: full catalog access, imports, reviews, branding, and team roles
+- `manager`: catalog access, deletion, imports, exports, and review queue
+- `editor`: catalog create/edit and exports, without destructive or administrative access
 
 ## Data files
 
@@ -134,7 +146,7 @@ See [\`deploy/UBUNTU.md\`](deploy/UBUNTU.md) for the full deployment steps.
 
 ## Security
 
-Yamu limits request and upload sizes, throttles admin login attempts and public contributions, validates state-changing browser requests, uses signed `HttpOnly` admin sessions, and sends a nonce-based Content Security Policy with additional browser hardening headers. The production process binds to `127.0.0.1`; expose it through nginx or Cloudflare Tunnel instead of opening port 3002 publicly.
+Yamu limits request and upload sizes, throttles public contributions, validates state-changing browser requests, uses Clerk sessions with server-enforced role checks, and sends a nonce-based Content Security Policy with additional browser hardening headers. The production process binds to `127.0.0.1`; expose it through nginx or Cloudflare Tunnel instead of opening port 3002 publicly.
 
 Run `npm audit` after dependency updates. Edge rate limiting in Cloudflare is still recommended because the built-in limiter is per Node process and is intended as a second layer of protection.
 

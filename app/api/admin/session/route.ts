@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { isAuthed } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 import { countNames, lastImport } from "@/lib/db";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  if (!(await isAuthed())) {
-    return NextResponse.json({ authed: false }, { status: 401 });
-  }
+  const access = await requireCapability("catalog:read");
+  if (!access.ok) return access.response;
   return NextResponse.json({
     authed: true,
+    identity: access.identity,
     count: countNames(),
     lastImport: lastImport() ?? null,
   });

@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { isAuthed } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 import { listSuggestions } from "@/lib/db";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const access = await requireCapability("suggestions:review");
+  if (!access.ok) return access.response;
   return NextResponse.json({ suggestions: listSuggestions("pending") });
 }

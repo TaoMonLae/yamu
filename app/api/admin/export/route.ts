@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAuthed } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 import { listNames } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -14,9 +14,8 @@ function escapeCsvCell(value: string) {
 }
 
 export async function GET(request: Request) {
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const access = await requireCapability("catalog:export");
+  if (!access.ok) return access.response;
 
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") ?? "json";

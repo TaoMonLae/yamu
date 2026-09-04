@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAuthed } from "@/lib/auth";
+import { requireCapability } from "@/lib/auth";
 import { countNames, deleteName, updateName } from "@/lib/db";
 import { readJsonObject } from "@/lib/http";
 import { validateNameInput } from "@/lib/name-input";
@@ -14,9 +14,8 @@ export async function PATCH(
   if (!isTrustedMutation(request)) {
     return NextResponse.json({ error: "Request rejected." }, { status: 403 });
   }
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const access = await requireCapability("catalog:write");
+  if (!access.ok) return access.response;
   const { id } = await context.params;
   if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) return NextResponse.json({ error: "Invalid name ID." }, { status: 400 });
   const body = await readJsonObject(request);
@@ -36,9 +35,8 @@ export async function DELETE(
   if (!isTrustedMutation(request)) {
     return NextResponse.json({ error: "Request rejected." }, { status: 403 });
   }
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  const access = await requireCapability("catalog:delete");
+  if (!access.ok) return access.response;
   const { id } = await context.params;
   if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) return NextResponse.json({ error: "Invalid name ID." }, { status: 400 });
   const ok = deleteName(Number(id));

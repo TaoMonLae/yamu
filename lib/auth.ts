@@ -1,96 +1,97 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { auth, clerkClient } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-const MAX_AGE = 60 * 60 * 12;
+export const ADMIN_ROLES = ["admin", "manager", "editor"] as const;
+export type AdminRole = (typeof ADMIN_ROLES)[number];
 
-function cookieName() {
-  return process.env.NODE_ENV === "production"
-    ? "__Host-yamu_admin_session"
-    : "yamu_admin_session";
+export type AdminCapability =
+  | "catalog:read"
+  | "catalog:write"
+  | "catalog:delete"
+  | "catalog:export"
+  | "catalog:import"
+  | "suggestions:review"
+  | "branding:manage"
+  | "team:manage";
+
+export type AdminIdentity = {
+  userId: string;
+  role: AdminRole;
+  name: string;
+  email: string;
+  imageUrl: string;
+};
+
+const ROLE_CAPABILITIES: Record<AdminRole, ReadonlySet<AdminCapability>> = {
+  admin: new Set(["catalog:read", "catalog:write", "catalog:delete", "catalog:export", "catalog:import", "suggestions:review", "branding:manage", "team:manage"]),
+  manager: new Set(["catalog:read", "catalog:write", "catalog:delete", "catalog:export", "catalog:import", "suggestions:review"]),
+  editor: new Set(["catalog:read", "catalog:write", "catalog:export"]),
+};
+
+function isAdminRole(value: unknown): value is AdminRole {
+  return typeof value === "string" && ADMIN_ROLES.includes(value as AdminRole);
 }
 
-function secret() {
-  const value = process.env.ADMIN_SESSION_SECRET?.trim();
-  if (process.env.NODE_ENV === "production") {
-    if (
-      !value
-      || Buffer.byteLength(value) < 32
-      || value === process.env.ADMIN_PASSWORD
-      || value === "replace-with-a-long-random-string"
-    ) {
-      throw new Error("ADMIN_SESSION_SECRET must be unique and at least 32 bytes in production.");
-    }
-    return value;
+function primaryEmail(user: {
+  primaryEmailAddressId: string | null;
+  emailAddresses: Array<{ id: string; emailAddress: string }>;
+}) {
+  return user.emailAddresses.find((email) => email.id === user.primaryEmailAddressId)?.emailAddress
+    ?? user.emailAddresses[0]?.emailAddress
+    ?? "";
+}
+
+function displayName(user: {
+  firstName: string | null;
+  lastName: string | null;
+  username: string | null;
+  primaryEmailAddressId: string | null;
+  emailAddresses: Array<{ id: string; emailAddress: string }>;
+}) {
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
+  return fullName || user.username || primaryEmail(user) || "Catalog teammate";
+}
+
+export function can(role: AdminRole, capability: AdminCapability) {
+  return ROLE_CAPABILITIES[role].has(capability);
+}
+
+export async function getAdminIdentity(): Promise<AdminIdentity | null> {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const client = await clerkClient();
+  let user = await client.users.getUser(userId);
+  const storedRole = user.publicMetadata.role;
+  let role: AdminRole;
+
+  if (isAdminRole(storedRole)) {
+    role = storedRole;
+  } else {
+    const firstPage = await client.users.getUserList({ limit: 1, orderBy: "+created_at" });
+    role = firstPage.data[0]?.id === userId ? "admin" : "editor";
+    user = await client.users.updateUserMetadata(userId, { publicMetadata: { role } });
   }
-  return value || "dev-only-change-me";
+
+  return {
+    userId,
+    role,
+    name: displayName(user),
+    email: primaryEmail(user),
+    imageUrl: user.imageUrl,
+  };
 }
 
-function sign(value: string) {
-  return createHmac("sha256", secret()).update(value).digest("hex");
-}
-
-export function adminPassword() {
-  const value = process.env.ADMIN_PASSWORD ?? "";
-  if (process.env.NODE_ENV === "production") {
-    if (value.length < 12 || value === "change-me") {
-      throw new Error("ADMIN_PASSWORD must be at least 12 characters in production.");
-    }
-    return value;
+export async function requireCapability(capability: AdminCapability) {
+  const identity = await getAdminIdentity();
+  if (!identity) {
+    return { ok: false as const, response: NextResponse.json({ error: "Authentication required." }, { status: 401 }) };
   }
-  return value || "change-me";
-}
-
-export function passwordsMatch(input: string, expected: string) {
-  const a = Buffer.from(input);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) {
-    const dummy = Buffer.alloc(b.length);
-    timingSafeEqual(dummy, dummy);
-    return false;
+  if (!can(identity.role, capability)) {
+    return {
+      ok: false as const,
+      response: NextResponse.json({ error: `The ${identity.role} role cannot perform this action.` }, { status: 403 }),
+    };
   }
-  return timingSafeEqual(a, b);
-}
-
-export async function createSession() {
-  const exp = Date.now() + MAX_AGE * 1000;
-  const nonce = randomBytes(16).toString("hex");
-  const payload = `${exp}.${nonce}`;
-  const token = `${payload}.${sign(payload)}`;
-  const jar = await cookies();
-  jar.set(cookieName(), token, {
-    httpOnly: true,
-    sameSite: "strict",
-    path: "/",
-    maxAge: MAX_AGE,
-    secure: process.env.NODE_ENV === "production",
-    priority: "high",
-  });
-}
-
-export async function clearSession() {
-  const jar = await cookies();
-  jar.delete(cookieName());
-}
-
-export async function isAuthed() {
-  const jar = await cookies();
-  const token = jar.get(cookieName())?.value;
-  if (!token) return false;
-  const parts = token.split(".");
-  if (parts.length !== 3) return false;
-  const [exp, nonce, mac] = parts;
-  if (!/^\d{13}$/.test(exp) || !/^[a-f0-9]{32}$/.test(nonce) || !/^[a-f0-9]{64}$/.test(mac)) {
-    return false;
-  }
-  const payload = `${exp}.${nonce}`;
-  let expected: string;
-  try {
-    expected = sign(payload);
-  } catch {
-    return false;
-  }
-  const a = Buffer.from(mac);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
-  return Number(exp) > Date.now();
+  return { ok: true as const, identity };
 }
