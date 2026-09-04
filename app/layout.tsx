@@ -90,7 +90,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-full bg-canvas text-ink">
-        <ClerkProvider afterSignOutUrl="/" appearance={{ theme: shadcn, variables: { colorPrimary: branding.accentColor, borderRadius: "2px" } }}>
+        <ClerkProvider dynamic afterSignOutUrl="/" appearance={{ theme: shadcn, variables: { colorPrimary: branding.accentColor, borderRadius: "2px" } }}>
           <PwaRegistration />
           <BrandingProvider initialBranding={branding}>
             <BlinkingSquares />
