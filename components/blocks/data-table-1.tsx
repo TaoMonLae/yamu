@@ -7,10 +7,13 @@ type Props = {
   rows: NameRecord[];
   query: string;
   total: number;
+  hasMore: boolean;
+  loadingMore: boolean;
   canWrite: boolean;
   canDelete: boolean;
   deletingId: number | null;
   onQuery: (value: string) => void;
+  onLoadMore: () => void;
   onAdd: () => void;
   onEdit: (row: NameRecord) => void;
   onDelete: (row: NameRecord) => void;
@@ -18,7 +21,7 @@ type Props = {
 
 const focus = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--index-accent)] focus-visible:ring-offset-2";
 
-export default function DataTable1({ rows, query, total, canWrite, canDelete, deletingId, onQuery, onAdd, onEdit, onDelete }: Props) {
+export default function DataTable1({ rows, query, total, hasMore, loadingMore, canWrite, canDelete, deletingId, onQuery, onLoadMore, onAdd, onEdit, onDelete }: Props) {
   return (
     <section className="border border-pewter bg-paper">
       <div className="flex flex-col gap-3 border-b border-pewter p-4 md:flex-row md:items-center md:justify-between">
@@ -28,8 +31,9 @@ export default function DataTable1({ rows, query, total, canWrite, canDelete, de
           <input value={query} onChange={(event) => onQuery(event.target.value)} placeholder="Search Mon, Burmese, English, notes…" className={`${focus} h-10 w-full border border-pewter bg-canvas pl-9 pr-3 text-[13px] text-ink placeholder:text-stone`} />
         </label>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.1em] text-stone">{rows.length} shown / {total} live</span>
+          <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.1em] text-stone">{rows.length} shown / {total} {query ? "matches" : "live"}</span>
           <a href="/api/admin/export?format=csv" className={`${focus} inline-flex h-10 items-center gap-2 border border-pewter px-3 text-[11px] font-medium text-ash no-underline hover:border-ink`}><Download className="h-3.5 w-3.5" /> CSV</a>
+          <a href="/api/admin/export?format=xlsx" className={`${focus} inline-flex h-10 items-center gap-2 border border-pewter px-3 text-[11px] font-medium text-ash no-underline hover:border-ink`}><Download className="h-3.5 w-3.5" /> XLSX</a>
           <a href="/api/admin/export?format=json" className={`${focus} inline-flex h-10 items-center gap-2 border border-pewter px-3 text-[11px] font-medium text-ash no-underline hover:border-ink`}><Download className="h-3.5 w-3.5" /> JSON</a>
           {canWrite ? <button type="button" onClick={onAdd} className={`${focus} inline-flex h-10 items-center gap-2 bg-[var(--index-accent)] px-4 text-[11px] font-semibold text-on-accent hover:brightness-95`}><Plus className="h-3.5 w-3.5" /> Add word</button> : null}
         </div>
@@ -67,6 +71,14 @@ export default function DataTable1({ rows, query, total, canWrite, canDelete, de
           </tbody>
         </table>
       </div>
+      {rows.length ? (
+        <div className="flex flex-col gap-3 border-t border-pewter bg-canvas px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-stone">
+            {hasMore ? `${rows.length.toLocaleString()} of ${total.toLocaleString()} records loaded` : `All ${total.toLocaleString()} matching records loaded`}
+          </p>
+          {hasMore ? <button type="button" disabled={loadingMore} onClick={onLoadMore} className={`${focus} inline-flex min-h-10 items-center justify-center border border-ink px-4 text-[11px] font-semibold text-ink transition-colors hover:bg-ink hover:text-canvas disabled:cursor-wait disabled:opacity-55`}>{loadingMore ? "Loading…" : "Load 200 more"}</button> : null}
+        </div>
+      ) : null}
     </section>
   );
 }

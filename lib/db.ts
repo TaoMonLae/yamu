@@ -250,13 +250,13 @@ function likePattern(value: string) {
   return `%${value.replace(/[!%_]/g, (character) => `!${character}`)}%`;
 }
 
-export function listNames(query = "", limit = 200): NameRecord[] {
+export function listNames(query = "", limit = 200, offset = 0): NameRecord[] {
   const database = getDb();
   const q = query.trim();
   if (!q) {
     return database
-      .prepare("SELECT * FROM names ORDER BY id DESC LIMIT ?")
-      .all(limit)
+      .prepare("SELECT * FROM names ORDER BY id DESC LIMIT ? OFFSET ?")
+      .all(limit, offset)
       .map((row) => mapRow(row as NameRow));
   }
 
@@ -266,9 +266,9 @@ export function listNames(query = "", limit = 200): NameRecord[] {
       `SELECT * FROM names
        WHERE mon LIKE ? ESCAPE '!' OR burmese LIKE ? ESCAPE '!' OR english LIKE ? ESCAPE '!' OR notes LIKE ? ESCAPE '!' OR credit LIKE ? ESCAPE '!'
        ORDER BY id DESC
-       LIMIT ?`,
+       LIMIT ? OFFSET ?`,
     )
-    .all(like, like, like, like, like, limit)
+    .all(like, like, like, like, like, limit, offset)
     .map((row) => mapRow(row as NameRow));
 }
 
@@ -747,8 +747,21 @@ export function deleteName(id: number) {
   return result.changes > 0;
 }
 
-export function countNames() {
-  const row = getDb().prepare("SELECT COUNT(*) AS n FROM names").get() as { n: number };
+export function countNames(query = "") {
+  const database = getDb();
+  const q = query.trim();
+  if (!q) {
+    const row = database.prepare("SELECT COUNT(*) AS n FROM names").get() as { n: number };
+    return row.n;
+  }
+
+  const like = likePattern(q);
+  const row = database
+    .prepare(
+      `SELECT COUNT(*) AS n FROM names
+       WHERE mon LIKE ? ESCAPE '!' OR burmese LIKE ? ESCAPE '!' OR english LIKE ? ESCAPE '!' OR notes LIKE ? ESCAPE '!' OR credit LIKE ? ESCAPE '!'`,
+    )
+    .get(like, like, like, like, like) as { n: number };
   return row.n;
 }
 

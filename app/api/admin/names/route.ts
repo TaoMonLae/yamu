@@ -7,6 +7,8 @@ import { isTrustedMutation } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
+const PAGE_SIZE = 200;
+
 export async function GET(request: Request) {
   const access = await requireCapability("catalog:read");
   if (!access.ok) return access.response;
@@ -15,7 +17,23 @@ export async function GET(request: Request) {
   if (query.length > 200) {
     return NextResponse.json({ error: "Keep the search under 200 characters." }, { status: 400 });
   }
-  return NextResponse.json({ results: listNames(query) });
+  const rawOffset = searchParams.get("offset") ?? "0";
+  if (!/^\d+$/.test(rawOffset)) {
+    return NextResponse.json({ error: "Use a valid catalog offset." }, { status: 400 });
+  }
+  const offset = Number(rawOffset);
+  if (!Number.isSafeInteger(offset)) {
+    return NextResponse.json({ error: "Use a valid catalog offset." }, { status: 400 });
+  }
+
+  const total = countNames(query);
+  const results = listNames(query, PAGE_SIZE, offset);
+  return NextResponse.json({
+    results,
+    total,
+    hasMore: offset + results.length < total,
+    nextOffset: offset + results.length,
+  });
 }
 
 export async function POST(request: Request) {

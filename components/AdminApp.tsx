@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -63,6 +63,9 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
   const [count, setCount] = useState(0);
   const [query, setQuery] = useState("");
   const [names, setNames] = useState<NameRecord[]>([]);
+  const [namesTotal, setNamesTotal] = useState(0);
+  const [hasMoreNames, setHasMoreNames] = useState(false);
+  const [loadingMoreNames, setLoadingMoreNames] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestionRecord[]>([]);
   const [team, setTeam] = useState<TeamUser[]>([]);
   const [step, setStep] = useState<ImportStep>("upload");
@@ -85,6 +88,7 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<AdminRole>("editor");
   const [inviteBusy, setInviteBusy] = useState(false);
+  const namesRequestId = useRef(0);
 
   const preview = useMemo(() => rows.slice(0, 6), [rows]);
   const wordSuggestions = suggestions.filter((item) => item.kind === "word").length;
@@ -111,11 +115,23 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
     await Promise.all([loadNames(""), canManage ? loadSuggestions() : Promise.resolve(), isAdmin ? loadTeam() : Promise.resolve()]);
   }
 
-  async function loadNames(nextQuery: string) {
-    const response = await fetch(`/api/admin/names?${new URLSearchParams({ q: nextQuery })}`);
-    if (!response.ok) return;
-    const data = await json<{ results: NameRecord[] }>(response);
-    setNames(data.results);
+  async function loadNames(nextQuery: string, append = false) {
+    const requestId = ++namesRequestId.current;
+    const offset = append ? names.length : 0;
+    if (append) setLoadingMoreNames(true);
+    try {
+      const response = await fetch(`/api/admin/names?${new URLSearchParams({ q: nextQuery, offset: String(offset) })}`);
+      if (requestId !== namesRequestId.current) return;
+      if (!response.ok) return setError("Could not load catalog entries.");
+      const data = await json<{ results: NameRecord[]; total: number; hasMore: boolean }>(response);
+      setNames((current) => append ? [...current, ...data.results] : data.results);
+      setNamesTotal(data.total);
+      setHasMoreNames(data.hasMore);
+    } catch {
+      if (requestId === namesRequestId.current) setError("Could not load catalog entries.");
+    } finally {
+      if (requestId === namesRequestId.current) setLoadingMoreNames(false);
+    }
   }
 
   async function loadSuggestions() {
@@ -342,7 +358,7 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
               <h2 className="mt-3 text-[30px] font-semibold capitalize tracking-[-0.035em]">{identity.role}</h2>
               <ul className="mt-6 space-y-3 text-[12px] text-white/62">
                 <li className="flex gap-2"><Check className="h-4 w-4 text-white" /> Create and edit catalog entries</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 text-white" /> Export CSV and JSON</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 text-white" /> Export CSV, XLSX, and JSON</li>
                 {canManage ? <li className="flex gap-2"><Check className="h-4 w-4 text-white" /> Import, delete, and review</li> : null}
                 {isAdmin ? <li className="flex gap-2"><Check className="h-4 w-4 text-white" /> Manage branding and team roles</li> : null}
               </ul>
@@ -354,7 +370,7 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
       {active === "catalog" ? (
         <>
           <SectionHeading eyebrow="Live database / multilingual index" title="Catalog entries." copy="Search, add, and verify Mon, Burmese, and English forms. Editors may create and edit; destructive actions remain manager-only." actions={<a href="/api/admin/template" className={`${button} no-underline`}><FileSpreadsheet className="h-3.5 w-3.5" /> CSV template</a>} />
-          <DataTable1 rows={names} query={query} total={count} canWrite canDelete={canManage} deletingId={deletingId} onQuery={(value) => { setQuery(value); void loadNames(value); }} onAdd={() => { setAdding(true); resetNotices(); }} onEdit={editRow} onDelete={(row) => void removeName(row)} />
+          <DataTable1 rows={names} query={query} total={namesTotal} hasMore={hasMoreNames} loadingMore={loadingMoreNames} canWrite canDelete={canManage} deletingId={deletingId} onQuery={(value) => { setQuery(value); void loadNames(value); }} onLoadMore={() => void loadNames(query, true)} onAdd={() => { setAdding(true); resetNotices(); }} onEdit={editRow} onDelete={(row) => void removeName(row)} />
         </>
       ) : null}
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import * as XLSX from "xlsx";
 import { requireCapability } from "@/lib/auth";
-import { listNames } from "@/lib/db";
+import { countNames, listNames } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,37 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") ?? "json";
-  const rows = listNames("", 100000).reverse();
+  const rows = listNames("", countNames()).reverse();
+
+  if (format === "xlsx") {
+    const worksheet = XLSX.utils.aoa_to_sheet([
+      ["Mon", "Burmese", "English", "Notes", "Credit"],
+      ...rows.map((row) => [
+        row.monVariants.join(", "),
+        row.burmeseVariants.join(", "),
+        row.englishVariants.join(", "),
+        row.notes,
+        row.credit,
+      ]),
+    ]);
+    worksheet["!cols"] = [
+      { wch: 28 },
+      { wch: 28 },
+      { wch: 28 },
+      { wch: 48 },
+      { wch: 24 },
+    ];
+    worksheet["!autofilter"] = { ref: worksheet["!ref"] ?? "A1:E1" };
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Catalog");
+    const output = XLSX.write(workbook, { bookType: "xlsx", type: "buffer", compression: true }) as Buffer;
+    return new NextResponse(new Uint8Array(output), {
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": 'attachment; filename="names.xlsx"',
+      },
+    });
+  }
 
   if (format === "csv") {
     const header = "mon,burmese,english,notes,credit";

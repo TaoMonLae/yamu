@@ -19,6 +19,7 @@ The default logo and favicon use the Yamu Mon mark in `public/yamu-logo.png` and
 - Accept missing-word contributions with optional contributor credit
 - Collect bug reports from every public page for admin triage
 - Import `.csv`, `.xls`, and `.xlsx` files through the admin page
+- Browse the catalog in 200-record batches and export the full catalog as CSV, XLSX, or JSON
 - Add, edit, delete, approve, reject, and export catalog records
 - Customize the site name, tagline, accent color, header logo, and favicon
 - Install Yamu as a PWA with platform icons and an offline connection screen
