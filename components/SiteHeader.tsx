@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import { useBranding } from "@/components/BrandingProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ReportBugButton } from "@/components/ReportBugButton";
@@ -80,9 +80,6 @@ export function SiteHeader({ lang, onLang, admin, about }: Props) {
             <SignInButton mode="redirect" forceRedirectUrl="/admin">
               <button type="button" className="border-r border-pewter px-3 font-display text-[10px] font-semibold uppercase tracking-[0.07em] hover:bg-mist sm:px-4">Sign in</button>
             </SignInButton>
-            <SignUpButton mode="redirect" forceRedirectUrl="/admin">
-              <button type="button" className="hidden border-r border-pewter bg-ink px-4 font-display text-[10px] font-semibold uppercase tracking-[0.07em] text-canvas hover:bg-accent hover:text-white lg:block">Sign up</button>
-            </SignUpButton>
           </Show>
           <Show when="signed-in">
             <span className="flex items-center border-r border-pewter px-3"><UserButton appearance={{ elements: { avatarBox: "h-8 w-8 rounded-[2px]" } }} /></span>

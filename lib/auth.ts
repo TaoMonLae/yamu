@@ -63,15 +63,13 @@ export async function getAdminIdentity(): Promise<AdminIdentity | null> {
   const client = await clerkClient();
   let user = await client.users.getUser(userId);
   const storedRole = user.publicMetadata.role;
-  let role: AdminRole;
-
-  if (isAdminRole(storedRole)) {
-    role = storedRole;
-  } else {
+  if (!isAdminRole(storedRole)) {
     const firstPage = await client.users.getUserList({ limit: 1, orderBy: "+created_at" });
-    role = firstPage.data[0]?.id === userId ? "admin" : "editor";
-    user = await client.users.updateUserMetadata(userId, { publicMetadata: { role } });
+    if (firstPage.data[0]?.id !== userId) return null;
+    user = await client.users.updateUserMetadata(userId, { publicMetadata: { role: "admin" } });
   }
+
+  const role = isAdminRole(user.publicMetadata.role) ? user.publicMetadata.role : "admin";
 
   return {
     userId,

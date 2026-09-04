@@ -10,7 +10,7 @@ function activeTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ variant = "header" }: { variant?: "header" | "sidebar" }) {
   const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
@@ -40,8 +40,11 @@ export function ThemeToggle() {
       aria-label={isDark ? "Use light mode" : "Use dark mode"}
       title={isDark ? "Use light mode" : "Use dark mode"}
       onClick={toggleTheme}
-      className="theme-toggle relative grid min-w-12 place-items-center border-r border-pewter bg-canvas text-ink transition-colors hover:bg-mist"
+      className={variant === "sidebar"
+        ? "theme-toggle mb-3 flex min-h-10 w-full items-center justify-between border border-white/15 bg-white/[0.04] px-3 text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white"
+        : "theme-toggle relative grid min-w-12 place-items-center border-r border-pewter bg-canvas text-ink transition-colors hover:bg-mist"}
     >
+      {variant === "sidebar" ? <span className="font-mono text-[9px] uppercase tracking-[0.12em]">Appearance</span> : null}
       <span className="theme-toggle__glyph" aria-hidden="true">
         <span className="theme-toggle__sun" />
         <span className="theme-toggle__moon" />

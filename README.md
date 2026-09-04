@@ -45,7 +45,9 @@ Open these pages:
 - About: <http://localhost:3002/about>
 - Admin: <http://localhost:3002/admin>
 
-Admin access uses Clerk. Sign up through `/sign-up`; the first Clerk user is bootstrapped as an administrator, and later users begin as editors until an administrator changes their role.
+Admin access uses Clerk in Invite-only mode. The first Clerk user is bootstrapped as an administrator; later teammates must be invited by an administrator with an explicit admin, manager, or editor role.
+
+In both the Clerk Development and Production instances, open **Access mode**, select **Invite-only**, and save. The admin **Team & roles** screen can then send Clerk invitations with the selected role attached as public metadata. Keep `/sign-up` configured because valid invitation links use it; the public interface does not expose self-service sign-up.
 
 Service-worker registration is enabled only in production. After running `npm run build` and `npm start`, supported browsers can install Yamu from `localhost` or an HTTPS deployment. Public pages use network-first caching, while admin and API requests are never cached.
 

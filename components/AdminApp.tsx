@@ -27,7 +27,7 @@ type SectionId = "overview" | "catalog" | "reviews" | "import" | "team" | "brand
 type ImportStep = "upload" | "map" | "done";
 type ImportMode = "append" | "replace";
 type SuggestionDraft = { suggestion: SuggestionRecord; mon: string; burmese: string; english: string; notes: string; credit: string };
-type TeamUser = { id: string; name: string; email: string; imageUrl: string; role: AdminRole; createdAt: number; lastSignInAt: number | null };
+type TeamUser = { id: string; name: string; email: string; imageUrl: string; role: AdminRole | "unassigned"; createdAt: number; lastSignInAt: number | null };
 
 const FIELD_OPTIONS: Array<{ value: ColumnKey; label: string }> = [
   { value: "mon", label: "Mon" },
@@ -38,17 +38,17 @@ const FIELD_OPTIONS: Array<{ value: ColumnKey; label: string }> = [
   { value: "skip", label: "Skip" },
 ];
 
-const button = "inline-flex min-h-10 items-center justify-center gap-2 border border-[#252624] px-4 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--index-accent)] focus-visible:ring-offset-2";
-const primaryButton = `${button} border-[var(--index-accent)] bg-[var(--index-accent)] text-white hover:brightness-95`;
-const field = "mt-2 h-11 w-full border border-[#cbccc8] bg-white px-3 text-[14px] outline-none focus:border-[var(--index-accent)] focus-visible:ring-1 focus-visible:ring-[var(--index-accent)]";
+const button = "inline-flex min-h-10 items-center justify-center gap-2 border border-ink px-4 text-[11px] font-semibold text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--index-accent)] focus-visible:ring-offset-2";
+const primaryButton = `${button} border-[var(--index-accent)] bg-[var(--index-accent)] text-on-accent hover:brightness-95`;
+const field = "mt-2 h-11 w-full border border-pewter bg-paper px-3 text-[14px] text-ink outline-none focus:border-[var(--index-accent)] focus-visible:ring-1 focus-visible:ring-[var(--index-accent)]";
 
 function SectionHeading({ eyebrow, title, copy, actions }: { eyebrow: string; title: string; copy: string; actions?: React.ReactNode }) {
   return (
-    <header className="mb-6 flex flex-col gap-5 border-b border-[#dfe0dc] pb-6 md:flex-row md:items-end md:justify-between">
+    <header className="mb-6 flex flex-col gap-5 border-b border-pewter pb-6 md:flex-row md:items-end md:justify-between">
       <div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.13em] text-[#7d7e79]">{eyebrow}</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.13em] text-stone">{eyebrow}</p>
         <h1 className="mt-3 text-[clamp(32px,4vw,48px)] font-semibold leading-none tracking-[-0.045em]">{title}</h1>
-        <p className="mt-3 max-w-[68ch] text-[13px] leading-6 text-[#686965]">{copy}</p>
+        <p className="mt-3 max-w-[68ch] text-[13px] leading-6 text-ash">{copy}</p>
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
     </header>
@@ -82,6 +82,9 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [manualName, setManualName] = useState<NameInput>({ mon: "", burmese: "", english: "", notes: "", credit: "" });
   const [roleSaving, setRoleSaving] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<AdminRole>("editor");
+  const [inviteBusy, setInviteBusy] = useState(false);
 
   const preview = useMemo(() => rows.slice(0, 6), [rows]);
   const wordSuggestions = suggestions.filter((item) => item.kind === "word").length;
@@ -279,6 +282,21 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
     setMessage("Role updated in Clerk user metadata.");
   }
 
+  async function inviteUser(event: FormEvent) {
+    event.preventDefault();
+    setInviteBusy(true); resetNotices();
+    const response = await fetch("/api/admin/team", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Yamu-Request": "1" },
+      body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+    });
+    const data = await json<{ invitation?: { emailAddress: string; role: AdminRole } }>(response);
+    setInviteBusy(false);
+    if (!response.ok) return setError(data.error || "Could not send the invitation.");
+    setMessage(`Invitation sent to ${data.invitation?.emailAddress ?? inviteEmail} as ${inviteRole}.`);
+    setInviteEmail("");
+  }
+
   const navItems: AppShellItem[] = [
     { id: "overview", label: "Overview", detail: "Catalog status", icon: LayoutDashboard },
     { id: "catalog", label: "Catalog", detail: "Names and variants", icon: Languages, badge: count },
@@ -289,9 +307,9 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
   ];
 
   return (
-    <AppShell1 identity={identity} siteName={branding.siteName} items={navItems} activeId={active} onNavigate={(id) => { setActive(id as SectionId); resetNotices(); }}>
-      {message ? <p role="status" className="mb-5 border-l-2 border-[#2b7a51] bg-[#eef7f1] px-4 py-3 text-[12px] text-[#215f40]">{message}</p> : null}
-      {error ? <p role="alert" className="mb-5 border-l-2 border-[var(--index-accent)] bg-[#fff1ec] px-4 py-3 text-[12px] text-[#a83e1c]">{error}</p> : null}
+    <AppShell1 identity={identity} siteName={branding.siteName} logoUrl={branding.logoUrl} items={navItems} activeId={active} onNavigate={(id) => { setActive(id as SectionId); resetNotices(); }}>
+      {message ? <p role="status" className="mb-5 border-l-2 border-success bg-[color-mix(in_srgb,var(--index-success)_12%,transparent)] px-4 py-3 text-[12px] text-success">{message}</p> : null}
+      {error ? <p role="alert" className="mb-5 border-l-2 border-[var(--index-accent)] bg-[color-mix(in_srgb,var(--index-accent)_12%,transparent)] px-4 py-3 text-[12px] text-accent">{error}</p> : null}
 
       {active === "overview" ? (
         <>
@@ -304,21 +322,21 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
           ]} />
 
           <div className="mt-6 grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-            <section className="border border-[#dedfdb] bg-white">
-              <div className="border-b border-[#dedfdb] px-5 py-4"><p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#777873]">Priority queue</p><h2 className="mt-2 text-[22px] font-semibold tracking-[-0.025em]">Next useful actions</h2></div>
+            <section className="border border-pewter bg-paper">
+              <div className="border-b border-pewter px-5 py-4"><p className="font-mono text-[10px] uppercase tracking-[0.12em] text-stone">Priority queue</p><h2 className="mt-2 text-[22px] font-semibold tracking-[-0.025em]">Next useful actions</h2></div>
               {[
                 { label: "Review community submissions", detail: `${suggestions.length} pending items`, target: "reviews" as SectionId, show: canManage },
                 { label: "Add or verify a catalog spelling", detail: "Write all three language forms", target: "catalog" as SectionId, show: true },
                 { label: "Import a verified spreadsheet", detail: "Map columns before publishing", target: "import" as SectionId, show: canManage },
                 { label: "Audit teammate roles", detail: `${team.length} Clerk accounts`, target: "team" as SectionId, show: isAdmin },
               ].filter((item) => item.show).map((item, index) => (
-                <button key={item.label} type="button" onClick={() => setActive(item.target)} className="group grid w-full grid-cols-[38px_1fr_auto] items-center gap-3 border-b border-[#e6e7e3] px-5 py-4 text-left last:border-b-0 hover:bg-[#fafaf8]">
-                  <span className="font-mono text-[10px] text-[#8a8b86]">0{index + 1}</span><span><span className="block text-[13px] font-medium">{item.label}</span><span className="mt-1 block text-[11px] text-[#777873]">{item.detail}</span></span><ArrowRight className="h-4 w-4 text-[#aaa] transition-transform group-hover:translate-x-1 group-hover:text-[var(--index-accent)]" />
+                <button key={item.label} type="button" onClick={() => setActive(item.target)} className="group grid w-full grid-cols-[38px_1fr_auto] items-center gap-3 border-b border-pewter px-5 py-4 text-left last:border-b-0 hover:bg-mist">
+                  <span className="font-mono text-[10px] text-stone">0{index + 1}</span><span><span className="block text-[13px] font-medium">{item.label}</span><span className="mt-1 block text-[11px] text-stone">{item.detail}</span></span><ArrowRight className="h-4 w-4 text-stone transition-transform group-hover:translate-x-1 group-hover:text-[var(--index-accent)]" />
                 </button>
               ))}
             </section>
 
-            <section className="border border-[#dedfdb] bg-[#141415] p-6 text-white">
+            <section className="border border-pewter bg-[#141415] p-6 text-white">
               <ShieldCheck className="h-5 w-5 text-[var(--index-accent)]" />
               <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.12em] text-white/45">Your access profile</p>
               <h2 className="mt-3 text-[30px] font-semibold capitalize tracking-[-0.035em]">{identity.role}</h2>
@@ -335,7 +353,7 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
 
       {active === "catalog" ? (
         <>
-          <SectionHeading eyebrow="Live database / multilingual index" title="Catalog entries." copy="Search, add, and verify Mon, Burmese, and English forms. Editors may create and edit; destructive actions remain manager-only." actions={<a href="/api/admin/template" className={`${button} text-[#252624] no-underline`}><FileSpreadsheet className="h-3.5 w-3.5" /> CSV template</a>} />
+          <SectionHeading eyebrow="Live database / multilingual index" title="Catalog entries." copy="Search, add, and verify Mon, Burmese, and English forms. Editors may create and edit; destructive actions remain manager-only." actions={<a href="/api/admin/template" className={`${button} no-underline`}><FileSpreadsheet className="h-3.5 w-3.5" /> CSV template</a>} />
           <DataTable1 rows={names} query={query} total={count} canWrite canDelete={canManage} deletingId={deletingId} onQuery={(value) => { setQuery(value); void loadNames(value); }} onAdd={() => { setAdding(true); resetNotices(); }} onEdit={editRow} onDelete={(row) => void removeName(row)} />
         </>
       ) : null}
@@ -343,20 +361,20 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
       {active === "reviews" && canManage ? (
         <>
           <SectionHeading eyebrow="Community intake / pending" title="Review queue." copy="Verify proposed spellings before publication. Bug reports stay private and can be marked resolved here." />
-          <div className="border border-[#dedfdb] bg-white">
+          <div className="border border-pewter bg-paper">
             {suggestions.length ? suggestions.map((suggestion, index) => (
-              <article key={suggestion.id} className="grid gap-4 border-b border-[#e2e3df] p-5 last:border-b-0 md:grid-cols-[56px_1fr_auto] md:items-center">
-                <span className="font-mono text-[11px] text-[#878883]">{String(index + 1).padStart(2, "0")}</span>
+              <article key={suggestion.id} className="grid gap-4 border-b border-pewter p-5 last:border-b-0 md:grid-cols-[56px_1fr_auto] md:items-center">
+                <span className="font-mono text-[11px] text-stone">{String(index + 1).padStart(2, "0")}</span>
                 <div>
-                  <div className="flex flex-wrap items-center gap-2"><span className={`px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] ${suggestion.kind === "bug" ? "bg-[#fff0eb] text-[#a54020]" : "bg-[#efefec] text-[#555652]"}`}>{suggestion.kind === "bug" ? "Bug report" : suggestion.source}</span><span className="text-[10px] text-[#8a8b86]">#{suggestion.id}</span></div>
+                  <div className="flex flex-wrap items-center gap-2"><span className={`px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] ${suggestion.kind === "bug" ? "bg-[color-mix(in_srgb,var(--index-accent)_12%,transparent)] text-accent" : "bg-mist text-ash"}`}>{suggestion.kind === "bug" ? "Bug report" : suggestion.source}</span><span className="text-[10px] text-stone">#{suggestion.id}</span></div>
                   <p lang={suggestion.source === "mon" ? "mnw" : suggestion.source === "burmese" ? "my" : "en"} className={`mt-3 text-[18px] font-semibold ${suggestion.source !== "english" ? "font-script" : ""}`}>{suggestion.text}</p>
-                  <p className="mt-1 text-[11px] text-[#777873]">{suggestion.contributorName ? `From ${suggestion.contributorName}` : "Anonymous submission"}{suggestion.note ? ` · ${suggestion.note}` : ""}</p>
+                  <p className="mt-1 text-[11px] text-stone">{suggestion.contributorName ? `From ${suggestion.contributorName}` : "Anonymous submission"}{suggestion.note ? ` · ${suggestion.note}` : ""}</p>
                 </div>
                 <div className="flex flex-wrap gap-2 md:justify-end">
                   {suggestion.kind === "bug" ? <button type="button" onClick={() => void reviewAction(suggestion.id, "resolve")} className={primaryButton}><Bug className="h-3.5 w-3.5" /> Resolve</button> : <><button type="button" onClick={() => void reviewAction(suggestion.id, "reject")} className={button}>Reject</button><button type="button" onClick={() => openReview(suggestion)} className={primaryButton}>Review <ArrowRight className="h-3.5 w-3.5" /></button></>}
                 </div>
               </article>
-            )) : <div className="px-6 py-20 text-center"><Check className="mx-auto h-6 w-6 text-[#2b7a51]" /><h2 className="mt-4 text-[22px] font-semibold">Queue clear.</h2><p className="mt-2 text-[12px] text-[#777873]">No suggestions or bug reports are waiting.</p></div>}
+            )) : <div className="px-6 py-20 text-center"><Check className="mx-auto h-6 w-6 text-success" /><h2 className="mt-4 text-[22px] font-semibold">Queue clear.</h2><p className="mt-2 text-[12px] text-stone">No suggestions or bug reports are waiting.</p></div>}
           </div>
         </>
       ) : null}
@@ -364,23 +382,36 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
       {active === "import" && canManage ? (
         <>
           <SectionHeading eyebrow="Data pipeline / controlled write" title="Import desk." copy="Upload a CSV or spreadsheet, map each source column, then append to or replace the catalog. A replace can be undone once." actions={step !== "upload" ? <button type="button" onClick={resetUpload} className={button}>Start over</button> : undefined} />
-          <div className="mb-5 grid border-l border-t border-[#dedfdb] sm:grid-cols-3">
-            {(["upload", "map", "done"] as ImportStep[]).map((item, index) => <div key={item} className={`border-b border-r border-[#dedfdb] px-4 py-3 ${step === item ? "bg-[#141415] text-white" : "bg-white"}`}><p className="font-mono text-[9px] uppercase tracking-[0.11em] opacity-55">0{index + 1}</p><p className="mt-1 text-[12px] font-medium capitalize">{item === "map" ? "Map columns" : item}</p></div>)}
+          <div className="mb-5 grid border-l border-t border-pewter sm:grid-cols-3">
+            {(["upload", "map", "done"] as ImportStep[]).map((item, index) => <div key={item} className={`border-b border-r border-pewter px-4 py-3 ${step === item ? "bg-ink text-canvas" : "bg-paper"}`}><p className="font-mono text-[9px] uppercase tracking-[0.11em] opacity-55">0{index + 1}</p><p className="mt-1 text-[12px] font-medium capitalize">{item === "map" ? "Map columns" : item}</p></div>)}
           </div>
-          {step === "upload" ? <label onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(event) => { event.preventDefault(); setDragOver(false); const next = event.dataTransfer.files[0]; if (next) void parseFile(next); }} className={`flex min-h-[360px] cursor-pointer flex-col items-center justify-center border border-dashed bg-white px-6 text-center ${dragOver ? "border-[var(--index-accent)] bg-[#fff8f5]" : "border-[#747570]"}`}><Upload className="h-6 w-6" /><h2 className="mt-6 text-[32px] font-semibold tracking-[-0.035em]">Drop .csv or .xlsx</h2><p className="mt-3 max-w-[48ch] text-[12px] leading-5 text-[#73746f]">A header row is required. Columns are detected automatically and can be corrected before anything is written.</p><span className={`mt-6 ${primaryButton}`}>{busy ? "Reading…" : "Choose source file"}</span><input type="file" accept=".csv,.xlsx,.xls,.txt" className="sr-only" onChange={(event) => { const next = event.target.files?.[0]; if (next) void parseFile(next); }} /></label> : null}
-          {step === "map" ? <section className="border border-[#dedfdb] bg-white"><div className="flex flex-col gap-4 border-b border-[#dedfdb] p-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#82837e]">{rows.length} source rows</p><h2 className="mt-2 text-[22px] font-semibold">{filename}</h2></div><div className="flex border border-[#bfc0bc]">{(["append", "replace"] as ImportMode[]).map((item) => <button key={item} type="button" onClick={() => setMode(item)} className={`h-10 px-4 text-[11px] font-medium capitalize ${mode === item ? "bg-[#141415] text-white" : "bg-white"}`}>{item}</button>)}</div></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-[12px]"><thead><tr>{headers.map((header) => <th key={header} className="border-b border-r border-[#dedfdb] p-3 last:border-r-0"><span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.1em] text-[#777873]">{header}</span><select value={mapping[header] ?? "skip"} onChange={(event) => setMapping((current) => ({ ...current, [header]: event.target.value as ColumnKey }))} className="h-9 w-full border border-[#c6c7c3] bg-white px-2">{FIELD_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></th>)}</tr></thead><tbody>{preview.map((row, index) => <tr key={index} className="border-b border-[#e6e7e3] last:border-b-0">{headers.map((header) => <td key={header} className="max-w-[260px] border-r border-[#e6e7e3] px-3 py-3 font-script last:border-r-0">{row[header]}</td>)}</tr>)}</tbody></table></div><div className="flex justify-end border-t border-[#dedfdb] p-4"><button type="button" disabled={busy} onClick={() => void commitImport()} className={primaryButton}>{busy ? "Writing…" : "Import and publish"} <ArrowRight className="h-3.5 w-3.5" /></button></div></section> : null}
-          {step === "done" ? <section className="border border-[#dedfdb] bg-white p-8 md:p-12"><span className="inline-flex h-10 w-10 items-center justify-center bg-[#e8f5ed] text-[#216240]"><Check className="h-5 w-5" /></span><h2 className="mt-7 text-[36px] font-semibold tracking-[-0.04em]">Catalog and JSON agree.</h2><p className="mt-3 max-w-[60ch] text-[13px] leading-6 text-[#686965]">{message}</p><div className="mt-7 flex gap-2"><button type="button" onClick={resetUpload} className={primaryButton}>Import another</button><button type="button" disabled={busy} onClick={() => void undoImport()} className={button}>Undo last import</button></div></section> : null}
-          {file && step === "upload" ? <p className="mt-3 text-[11px] text-[#777873]">Selected: {file.name}</p> : null}
+          {step === "upload" ? <label onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(event) => { event.preventDefault(); setDragOver(false); const next = event.dataTransfer.files[0]; if (next) void parseFile(next); }} className={`flex min-h-[360px] cursor-pointer flex-col items-center justify-center border border-dashed bg-paper px-6 text-center ${dragOver ? "border-[var(--index-accent)] bg-[color-mix(in_srgb,var(--index-accent)_8%,var(--index-paper))]" : "border-stone"}`}><Upload className="h-6 w-6" /><h2 className="mt-6 text-[32px] font-semibold tracking-[-0.035em]">Drop .csv or .xlsx</h2><p className="mt-3 max-w-[48ch] text-[12px] leading-5 text-stone">A header row is required. Columns are detected automatically and can be corrected before anything is written.</p><span className={`mt-6 ${primaryButton}`}>{busy ? "Reading…" : "Choose source file"}</span><input type="file" accept=".csv,.xlsx,.xls,.txt" className="sr-only" onChange={(event) => { const next = event.target.files?.[0]; if (next) void parseFile(next); }} /></label> : null}
+          {step === "map" ? <section className="border border-pewter bg-paper"><div className="flex flex-col gap-4 border-b border-pewter p-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-mono text-[9px] uppercase tracking-[0.12em] text-stone">{rows.length} source rows</p><h2 className="mt-2 text-[22px] font-semibold">{filename}</h2></div><div className="flex border border-pewter">{(["append", "replace"] as ImportMode[]).map((item) => <button key={item} type="button" onClick={() => setMode(item)} className={`h-10 px-4 text-[11px] font-medium capitalize ${mode === item ? "bg-ink text-canvas" : "bg-paper"}`}>{item}</button>)}</div></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-[12px]"><thead><tr>{headers.map((header) => <th key={header} className="border-b border-r border-pewter p-3 last:border-r-0"><span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.1em] text-stone">{header}</span><select value={mapping[header] ?? "skip"} onChange={(event) => setMapping((current) => ({ ...current, [header]: event.target.value as ColumnKey }))} className="h-9 w-full border border-pewter bg-paper px-2 text-ink">{FIELD_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></th>)}</tr></thead><tbody>{preview.map((row, index) => <tr key={index} className="border-b border-pewter last:border-b-0">{headers.map((header) => <td key={header} className="max-w-[260px] border-r border-pewter px-3 py-3 font-script last:border-r-0">{row[header]}</td>)}</tr>)}</tbody></table></div><div className="flex justify-end border-t border-pewter p-4"><button type="button" disabled={busy} onClick={() => void commitImport()} className={primaryButton}>{busy ? "Writing…" : "Import and publish"} <ArrowRight className="h-3.5 w-3.5" /></button></div></section> : null}
+          {step === "done" ? <section className="border border-pewter bg-paper p-8 md:p-12"><span className="inline-flex h-10 w-10 items-center justify-center bg-[color-mix(in_srgb,var(--index-success)_12%,transparent)] text-success"><Check className="h-5 w-5" /></span><h2 className="mt-7 text-[36px] font-semibold tracking-[-0.04em]">Catalog and JSON agree.</h2><p className="mt-3 max-w-[60ch] text-[13px] leading-6 text-ash">{message}</p><div className="mt-7 flex gap-2"><button type="button" onClick={resetUpload} className={primaryButton}>Import another</button><button type="button" disabled={busy} onClick={() => void undoImport()} className={button}>Undo last import</button></div></section> : null}
+          {file && step === "upload" ? <p className="mt-3 text-[11px] text-stone">Selected: {file.name}</p> : null}
         </>
       ) : null}
 
       {active === "team" && isAdmin ? (
         <>
-          <SectionHeading eyebrow="Clerk users / public metadata" title="Team and roles." copy="Admins control access levels. Managers operate imports and reviews; editors maintain entries without destructive permissions." actions={<a href="https://dashboard.clerk.com/" target="_blank" rel="noreferrer" className={`${button} text-[#252624] no-underline`}>Open Clerk dashboard</a>} />
-          <div className="overflow-x-auto border border-[#dedfdb] bg-white">
-            <table className="w-full min-w-[720px] text-left text-[13px]"><thead><tr className="border-b border-[#dedfdb] bg-[#f4f4f1]">{["Teammate", "Email", "Role", "Last sign-in"].map((label) => <th key={label} className="h-10 px-4 font-mono text-[9px] font-medium uppercase tracking-[0.11em] text-[#73746f]">{label}</th>)}</tr></thead><tbody>{team.map((user) => <tr key={user.id} className="border-b border-[#e6e7e3] last:border-b-0"><td className="px-4 py-3"><div className="flex items-center gap-3"><Image src={user.imageUrl} alt="" width={32} height={32} unoptimized className="h-8 w-8 bg-[#efefec] object-cover" /><span className="font-medium">{user.name}{user.id === identity.userId ? <span className="ml-2 text-[10px] text-[#858681]">You</span> : null}</span></div></td><td className="px-4 py-3 text-[#666762]">{user.email}</td><td className="px-4 py-3"><select value={user.role} disabled={roleSaving === user.id || user.id === identity.userId} onChange={(event) => void changeRole(user.id, event.target.value as AdminRole)} className="h-9 min-w-32 border border-[#c8c9c5] bg-white px-2 text-[12px] capitalize disabled:bg-[#f1f1ee]">{(["admin", "manager", "editor"] as AdminRole[]).map((role) => <option key={role} value={role}>{role}</option>)}</select></td><td className="px-4 py-3 text-[12px] text-[#777873]">{user.lastSignInAt ? new Date(user.lastSignInAt).toLocaleDateString() : "Never"}</td></tr>)}</tbody></table>
+          <SectionHeading eyebrow="Clerk users / public metadata" title="Team and roles." copy="Admins control access levels. Managers operate imports and reviews; editors maintain entries without destructive permissions." actions={<a href="https://dashboard.clerk.com/" target="_blank" rel="noreferrer" className={`${button} no-underline`}>Open Clerk dashboard</a>} />
+          <form onSubmit={inviteUser} className="mb-5 grid gap-3 border border-pewter bg-paper p-4 sm:grid-cols-[minmax(220px,1fr)_160px_auto] sm:items-end">
+            <label>
+              <span className="font-mono text-[9px] uppercase tracking-[0.11em] text-stone">Invite teammate by email</span>
+              <input type="email" required autoComplete="email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} placeholder="editor@example.com…" className={field} />
+            </label>
+            <label>
+              <span className="font-mono text-[9px] uppercase tracking-[0.11em] text-stone">Starting role</span>
+              <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value as AdminRole)} className={`${field} capitalize`}>
+                {(["admin", "manager", "editor"] as AdminRole[]).map((role) => <option key={role} value={role}>{role}</option>)}
+              </select>
+            </label>
+            <button type="submit" disabled={inviteBusy} className={`${primaryButton} sm:mb-px`}>{inviteBusy ? "Sending…" : "Send invite"}</button>
+          </form>
+          <div className="overflow-x-auto border border-pewter bg-paper">
+            <table className="w-full min-w-[720px] text-left text-[13px]"><thead><tr className="border-b border-pewter bg-mist">{["Teammate", "Email", "Role", "Last sign-in"].map((label) => <th key={label} className="h-10 px-4 font-mono text-[9px] font-medium uppercase tracking-[0.11em] text-stone">{label}</th>)}</tr></thead><tbody>{team.map((user) => <tr key={user.id} className="border-b border-pewter last:border-b-0"><td className="px-4 py-3"><div className="flex items-center gap-3"><Image src={user.imageUrl} alt="" width={32} height={32} unoptimized className="h-8 w-8 bg-mist object-cover" /><span className="font-medium">{user.name}{user.id === identity.userId ? <span className="ml-2 text-[10px] text-stone">You</span> : null}</span></div></td><td className="px-4 py-3 text-ash">{user.email}</td><td className="px-4 py-3"><select value={user.role} disabled={roleSaving === user.id || user.id === identity.userId} onChange={(event) => void changeRole(user.id, event.target.value as AdminRole)} className="h-9 min-w-32 border border-pewter bg-paper px-2 text-[12px] text-ink capitalize disabled:bg-mist">{user.role === "unassigned" ? <option value="unassigned" disabled>Unassigned</option> : null}{(["admin", "manager", "editor"] as AdminRole[]).map((role) => <option key={role} value={role}>{role}</option>)}</select></td><td className="px-4 py-3 text-[12px] text-stone">{user.lastSignInAt ? new Date(user.lastSignInAt).toLocaleDateString() : "Never"}</td></tr>)}</tbody></table>
           </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-3">{[{ role: "Admin", detail: "Full access, branding, and roles" }, { role: "Manager", detail: "Catalog, imports, delete, and reviews" }, { role: "Editor", detail: "Catalog create, edit, and export" }].map((item) => <article key={item.role} className="border border-[#dedfdb] bg-white p-4"><p className="font-mono text-[10px] uppercase tracking-[0.11em] text-[#777873]">{item.role}</p><p className="mt-2 text-[12px] text-[#555652]">{item.detail}</p></article>)}</div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">{[{ role: "Admin", detail: "Full access, branding, and roles" }, { role: "Manager", detail: "Catalog, imports, delete, and reviews" }, { role: "Editor", detail: "Catalog create, edit, and export" }].map((item) => <article key={item.role} className="border border-pewter bg-paper p-4"><p className="font-mono text-[10px] uppercase tracking-[0.11em] text-stone">{item.role}</p><p className="mt-2 text-[12px] text-ash">{item.detail}</p></article>)}</div>
         </>
       ) : null}
 
@@ -388,16 +419,16 @@ export function AdminApp({ identity }: { identity: AdminIdentity }) {
 
       {(adding || editing) ? (
         <div role="dialog" aria-modal="true" aria-labelledby="catalog-form-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
-          <form onSubmit={saveName} className="max-h-[calc(100vh-32px)] w-full max-w-2xl overflow-y-auto border border-[#222] bg-[#fafaf8]">
-            <div className="flex items-center justify-between border-b border-[#d9dad6] px-5 py-4"><div><p className="font-mono text-[9px] uppercase tracking-[0.11em] text-[#7d7e79]">SQLite + JSON</p><h2 id="catalog-form-title" className="mt-1 text-[22px] font-semibold">{editing ? "Edit catalog entry" : "Add verified word"}</h2></div><button type="button" onClick={() => { setAdding(false); setEditing(null); resetNotices(); }} className="p-2 text-[20px]" aria-label="Close">×</button></div>
-            <div className="grid gap-5 p-5 md:grid-cols-2">{(["mon", "burmese", "english"] as const).map((key) => <label key={key} className={key === "english" ? "md:col-span-2" : ""}><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">{key} variants</span><input required lang={key === "mon" ? "mnw" : key === "burmese" ? "my" : "en"} value={(editing ?? manualName)[key]} onChange={(event) => editing ? setEditing({ ...editing, [key]: event.target.value }) : setManualName({ ...manualName, [key]: event.target.value })} placeholder="Separate alternate spellings with commas" className={`${field} ${key !== "english" ? "font-script text-[16px]" : ""}`} /></label>)}<label className="md:col-span-2"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">Notes</span><textarea rows={3} value={(editing ?? manualName).notes ?? ""} onChange={(event) => editing ? setEditing({ ...editing, notes: event.target.value }) : setManualName({ ...manualName, notes: event.target.value })} className={`${field} h-auto py-3`} /></label><label className="md:col-span-2"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">Contributor credit</span><input value={(editing ?? manualName).credit ?? ""} onChange={(event) => editing ? setEditing({ ...editing, credit: event.target.value }) : setManualName({ ...manualName, credit: event.target.value })} className={field} /></label>{error ? <p role="alert" className="md:col-span-2 text-[12px] text-[#a83e1c]">{error}</p> : null}</div>
-            <div className="flex justify-end gap-2 border-t border-[#d9dad6] p-4"><button type="button" onClick={() => { setAdding(false); setEditing(null); resetNotices(); }} className={button}>Cancel</button><button type="submit" disabled={busy} className={primaryButton}>{busy ? "Saving…" : "Save and publish"}</button></div>
+          <form onSubmit={saveName} className="max-h-[calc(100vh-32px)] w-full max-w-2xl overflow-y-auto border border-ink bg-canvas text-ink">
+            <div className="flex items-center justify-between border-b border-pewter px-5 py-4"><div><p className="font-mono text-[9px] uppercase tracking-[0.11em] text-stone">SQLite + JSON</p><h2 id="catalog-form-title" className="mt-1 text-[22px] font-semibold">{editing ? "Edit catalog entry" : "Add verified word"}</h2></div><button type="button" onClick={() => { setAdding(false); setEditing(null); resetNotices(); }} className="p-2 text-[20px]" aria-label="Close">×</button></div>
+            <div className="grid gap-5 p-5 md:grid-cols-2">{(["mon", "burmese", "english"] as const).map((key) => <label key={key} className={key === "english" ? "md:col-span-2" : ""}><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-ash">{key} variants</span><input required lang={key === "mon" ? "mnw" : key === "burmese" ? "my" : "en"} value={(editing ?? manualName)[key]} onChange={(event) => editing ? setEditing({ ...editing, [key]: event.target.value }) : setManualName({ ...manualName, [key]: event.target.value })} placeholder="Separate alternate spellings with commas" className={`${field} ${key !== "english" ? "font-script text-[16px]" : ""}`} /></label>)}<label className="md:col-span-2"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-ash">Notes</span><textarea rows={3} value={(editing ?? manualName).notes ?? ""} onChange={(event) => editing ? setEditing({ ...editing, notes: event.target.value }) : setManualName({ ...manualName, notes: event.target.value })} className={`${field} h-auto py-3`} /></label><label className="md:col-span-2"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-ash">Contributor credit</span><input value={(editing ?? manualName).credit ?? ""} onChange={(event) => editing ? setEditing({ ...editing, credit: event.target.value }) : setManualName({ ...manualName, credit: event.target.value })} className={field} /></label>{error ? <p role="alert" className="md:col-span-2 text-[12px] text-accent">{error}</p> : null}</div>
+            <div className="flex justify-end gap-2 border-t border-pewter p-4"><button type="button" onClick={() => { setAdding(false); setEditing(null); resetNotices(); }} className={button}>Cancel</button><button type="submit" disabled={busy} className={primaryButton}>{busy ? "Saving…" : "Save and publish"}</button></div>
           </form>
         </div>
       ) : null}
 
       {reviewing ? (
-        <div role="dialog" aria-modal="true" aria-labelledby="review-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"><form onSubmit={approveSuggestion} className="max-h-[calc(100vh-32px)] w-full max-w-2xl overflow-y-auto border border-[#222] bg-[#fafaf8]"><div className="flex items-center justify-between border-b border-[#d9dad6] px-5 py-4"><div><p className="font-mono text-[9px] uppercase tracking-[0.11em] text-[#7d7e79]">Suggestion #{reviewing.suggestion.id}</p><h2 id="review-title" className="mt-1 text-[22px] font-semibold">Verify before publishing</h2></div><button type="button" onClick={() => { setReviewing(null); resetNotices(); }} className="p-2 text-[20px]" aria-label="Close">×</button></div><div className="space-y-5 p-5"><div className="border border-[#dedfdb] bg-white p-4"><p className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#777873]">Submitted form</p><p className={`mt-2 text-[24px] font-semibold ${reviewing.suggestion.source !== "english" ? "font-script" : ""}`}>{reviewing.suggestion.text}</p></div>{(["mon", "burmese", "english"] as const).map((key) => <label key={key} className="block"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">{key} variants</span><input required value={reviewing[key]} onChange={(event) => setReviewing({ ...reviewing, [key]: event.target.value })} className={`${field} ${key !== "english" ? "font-script text-[16px]" : ""}`} /></label>)}<label className="block"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">Catalog notes</span><textarea rows={3} value={reviewing.notes} onChange={(event) => setReviewing({ ...reviewing, notes: event.target.value })} className={`${field} h-auto py-3`} /></label><label className="block"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[#6f706c]">Contributor credit</span><input value={reviewing.credit} onChange={(event) => setReviewing({ ...reviewing, credit: event.target.value })} className={field} /></label>{error ? <p role="alert" className="text-[12px] text-[#a83e1c]">{error}</p> : null}</div><div className="flex justify-end gap-2 border-t border-[#d9dad6] p-4"><button type="button" onClick={() => { setReviewing(null); resetNotices(); }} className={button}>Cancel</button><button type="submit" disabled={busy} className={primaryButton}>{busy ? "Publishing…" : "Approve and publish"}</button></div></form></div>
+        <div role="dialog" aria-modal="true" aria-labelledby="review-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"><form onSubmit={approveSuggestion} className="max-h-[calc(100vh-32px)] w-full max-w-2xl overflow-y-auto border border-ink bg-canvas text-ink"><div className="flex items-center justify-between border-b border-pewter px-5 py-4"><div><p className="font-mono text-[9px] uppercase tracking-[0.11em] text-stone">Suggestion #{reviewing.suggestion.id}</p><h2 id="review-title" className="mt-1 text-[22px] font-semibold">Verify before publishing</h2></div><button type="button" onClick={() => { setReviewing(null); resetNotices(); }} className="p-2 text-[20px]" aria-label="Close">×</button></div><div className="space-y-5 p-5"><div className="border border-pewter bg-paper p-4"><p className="font-mono text-[9px] uppercase tracking-[0.1em] text-stone">Submitted form</p><p className={`mt-2 text-[24px] font-semibold ${reviewing.suggestion.source !== "english" ? "font-script" : ""}`}>{reviewing.suggestion.text}</p></div>{(["mon", "burmese", "english"] as const).map((key) => <label key={key} className="block"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-ash">{key} variants</span><input required value={reviewing[key]} onChange={(event) => setReviewing({ ...reviewing, [key]: event.target.value })} className={`${field} ${key !== "english" ? "font-script text-[16px]" : ""}`} /></label>)}<label className="block"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-ash">Catalog notes</span><textarea rows={3} value={reviewing.notes} onChange={(event) => setReviewing({ ...reviewing, notes: event.target.value })} className={`${field} h-auto py-3`} /></label><label className="block"><span className="font-mono text-[9px] uppercase tracking-[0.1em] text-ash">Contributor credit</span><input value={reviewing.credit} onChange={(event) => setReviewing({ ...reviewing, credit: event.target.value })} className={field} /></label>{error ? <p role="alert" className="text-[12px] text-accent">{error}</p> : null}</div><div className="flex justify-end gap-2 border-t border-pewter p-4"><button type="button" onClick={() => { setReviewing(null); resetNotices(); }} className={button}>Cancel</button><button type="submit" disabled={busy} className={primaryButton}>{busy ? "Publishing…" : "Approve and publish"}</button></div></form></div>
       ) : null}
     </AppShell1>
   );

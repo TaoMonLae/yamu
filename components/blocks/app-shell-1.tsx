@@ -3,6 +3,8 @@
 import { UserButton } from "@clerk/nextjs";
 import { ChevronRight, ExternalLink, Menu, X, type LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { BrandMark } from "@/components/BrandMark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { AdminIdentity } from "@/lib/auth";
 
 export type AppShellItem = {
@@ -17,6 +19,7 @@ export type AppShellItem = {
 type Props = {
   identity: AdminIdentity;
   siteName: string;
+  logoUrl: string | null;
   items: AppShellItem[];
   activeId: string;
   onNavigate: (id: string) => void;
@@ -26,7 +29,7 @@ type Props = {
 
 const focus = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--index-accent)] focus-visible:ring-offset-2";
 
-export default function AppShell1({ identity, siteName, items, activeId, onNavigate, children, actions }: Props) {
+export default function AppShell1({ identity, siteName, logoUrl, items, activeId, onNavigate, children, actions }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const visibleItems = items.filter((item) => !item.hidden);
   const active = visibleItems.find((item) => item.id === activeId) ?? visibleItems[0];
@@ -40,7 +43,7 @@ export default function AppShell1({ identity, siteName, items, activeId, onNavig
     <div className="flex h-full flex-col bg-[#141415] text-[#f8f7f3]">
       <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
         <button type="button" onClick={() => navigate("overview")} className={`${focus} flex items-center gap-3 text-left`}>
-          <span lang="mnw" className="flex h-8 w-8 items-center justify-center bg-[var(--index-accent)] font-script text-lg font-bold text-white">ယ</span>
+          <BrandMark logoUrl={logoUrl} className="h-9 w-9" />
           <span>
             <span className="block text-[13px] font-semibold tracking-[-0.01em]">{siteName}</span>
             <span className="block font-mono text-[9px] uppercase tracking-[0.14em] text-white/45">Catalog operations</span>
@@ -77,6 +80,7 @@ export default function AppShell1({ identity, siteName, items, activeId, onNavig
       </nav>
 
       <div className="border-t border-white/10 p-4">
+        <ThemeToggle variant="sidebar" />
         <div className="flex items-center gap-3">
           <UserButton appearance={{ elements: { avatarBox: "h-9 w-9 rounded-[2px]" } }} />
           <div className="min-w-0 flex-1">
@@ -90,7 +94,7 @@ export default function AppShell1({ identity, siteName, items, activeId, onNavig
   );
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] text-[#141415] [--rb-accent:var(--index-accent)] [--rb-r-md:2px]">
+    <div className="min-h-screen bg-canvas text-ink [--rb-accent:var(--index-accent)] [--rb-r-md:2px]">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">{sidebar}</aside>
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -100,12 +104,12 @@ export default function AppShell1({ identity, siteName, items, activeId, onNavig
       ) : null}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-[#e4e5e1] bg-[#fafaf8]/95 px-4 backdrop-blur md:px-7">
+        <header className="sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-pewter bg-canvas/95 px-4 backdrop-blur md:px-7">
           <button type="button" onClick={() => setMobileOpen(true)} className={`${focus} -ml-1 p-2 lg:hidden`} aria-label="Open navigation"><Menu className="h-5 w-5" /></button>
-          <div className="flex min-w-0 flex-1 items-center gap-2 text-[12px] text-[#73746f]">
-            <span>Admin</span><ChevronRight className="h-3.5 w-3.5" /><span className="truncate font-medium text-[#141415]">{active?.label}</span>
+          <div className="flex min-w-0 flex-1 items-center gap-2 text-[12px] text-stone">
+            <span>Admin</span><ChevronRight className="h-3.5 w-3.5" /><span className="truncate font-medium text-ink">{active?.label}</span>
           </div>
-          <a href="/" target="_blank" className={`${focus} hidden items-center gap-2 border border-[#d8d9d5] bg-white px-3 py-2 text-[11px] font-medium text-[#424340] no-underline hover:border-[#141415] sm:inline-flex`}>
+          <a href="/" target="_blank" className={`${focus} hidden items-center gap-2 border border-pewter bg-paper px-3 py-2 text-[11px] font-medium text-ash no-underline hover:border-ink sm:inline-flex`}>
             View public site <ExternalLink className="h-3.5 w-3.5" />
           </a>
           {actions}

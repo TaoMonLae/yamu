@@ -7,10 +7,12 @@ import { isTrustedMutation } from "@/lib/request-security";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function roleOf(value: unknown): AdminRole {
+type ListedRole = AdminRole | "unassigned";
+
+function roleOf(value: unknown): ListedRole {
   return typeof value === "string" && ADMIN_ROLES.includes(value as AdminRole)
     ? value as AdminRole
-    : "editor";
+    : "unassigned";
 }
 
 function serializeUser(user: Awaited<ReturnType<Awaited<ReturnType<typeof clerkClient>>["users"]["getUser"]>>) {
@@ -68,4 +70,28 @@ export async function PATCH(request: Request) {
     publicMetadata: { role: body.role },
   });
   return NextResponse.json({ user: serializeUser(updated) });
+}
+
+export async function POST(request: Request) {
+  if (!isTrustedMutation(request)) {
+    return NextResponse.json({ error: "Request rejected." }, { status: 403 });
+  }
+  const access = await requireCapability("team:manage");
+  if (!access.ok) return access.response;
+  const body = await readJsonObject<{ email?: string; role?: string }>(request);
+  const email = body?.email?.trim().toLowerCase() ?? "";
+  if (!/^\S+@\S+\.\S+$/.test(email) || !body?.role || !ADMIN_ROLES.includes(body.role as AdminRole)) {
+    return NextResponse.json({ error: "Enter a valid email and choose a role." }, { status: 400 });
+  }
+
+  try {
+    const client = await clerkClient();
+    const invitation = await client.invitations.createInvitation({
+      emailAddress: email,
+      publicMetadata: { role: body.role },
+    });
+    return NextResponse.json({ invitation: { id: invitation.id, emailAddress: invitation.emailAddress, role: body.role } }, { status: 201 });
+  } catch {
+    return NextResponse.json({ error: "Could not send the invitation. The address may already be invited or registered." }, { status: 400 });
+  }
 }

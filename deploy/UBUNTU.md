@@ -56,6 +56,9 @@ Create a production instance for `yamumon.com` in Clerk, complete its DNS setup,
 and use its `pk_live_` and `sk_live_` keys. Development `pk_test_` and `sk_test_`
 keys are not suitable for this production deployment. Because the publishable
 key is embedded in the client bundle, update `.env.local` before building.
+Set the Clerk production instance's **Access mode** to **Invite-only**. The
+`/sign-up` route remains available for valid Clerk invitation links, but the
+public site does not offer self-service registration.
 
 Keep `TRUST_CLOUDFLARE_PROXY=true` only when firewall rules or Cloudflare Tunnel prevent visitors from reaching the origin directly. Otherwise, remove it so a client cannot spoof Cloudflare's visitor-IP header.
 
