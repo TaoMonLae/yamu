@@ -1,7 +1,7 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
-import { ChevronRight, ExternalLink, Menu, X, type LucideIcon } from "lucide-react";
+import { SignOutButton, UserButton } from "@clerk/nextjs";
+import { ChevronRight, ExternalLink, LogOut, Menu, X, type LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -86,8 +86,13 @@ export default function AppShell1({ identity, siteName, logoUrl, items, activeId
           <div className="min-w-0 flex-1">
             <p className="truncate text-[12px] font-medium">{identity.name}</p>
             <p className="truncate text-[10px] text-white/40">{identity.email}</p>
+            <span className="mt-1.5 inline-flex border border-white/15 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-white/55">{identity.role}</span>
           </div>
-          <span className="border border-white/15 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-white/55">{identity.role}</span>
+          <SignOutButton redirectUrl="/">
+            <button type="button" aria-label="Sign out" title="Sign out" className={`${focus} inline-flex h-10 w-10 shrink-0 items-center justify-center border border-white/15 text-white/55 transition-colors hover:border-white/35 hover:bg-white/[0.08] hover:text-white focus-visible:ring-offset-[#141415]`}>
+              <LogOut aria-hidden className="h-4 w-4" strokeWidth={1.7} />
+            </button>
+          </SignOutButton>
         </div>
       </div>
     </div>
