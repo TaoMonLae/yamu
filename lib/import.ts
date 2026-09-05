@@ -92,7 +92,7 @@ function tableFromRows(rows: unknown[][]) {
 
   const headers = uniquifyHeaders(cleaned[0]);
   const body = cleaned.slice(1).map((row) => {
-    const record: Record<string, string> = {};
+    const record: Record<string, string> = Object.create(null);
     headers.forEach((header, index) => {
       record[header] = row[index] ?? "";
     });
@@ -107,21 +107,28 @@ function tableFromRows(rows: unknown[][]) {
 }
 
 function uniquifyHeaders(headers: string[]) {
-  const seen = new Map<string, number>();
-  return headers.map((raw, index) => {
-    const base = raw.slice(0, 120) || `column_${index + 1}`;
-    const count = seen.get(base) ?? 0;
-    seen.set(base, count + 1);
-    return count === 0 ? base : `${base}_${count + 1}`;
+  const bases = headers.map((raw, index) => raw.slice(0, 120) || `column_${index + 1}`);
+  const reserved = new Set(bases);
+  const used = new Set<string>();
+  return bases.map((base) => {
+    let header = base;
+    let suffix = 2;
+    while (used.has(header)) {
+      header = `${base}_${suffix++}`;
+      while (reserved.has(header)) header = `${base}_${suffix++}`;
+    }
+    used.add(header);
+    return header;
   });
 }
 
 export function suggestColumnMap(headers: string[]): ColumnMap {
   const used = new Set<ColumnKey>();
-  const map: ColumnMap = {};
+  const map: ColumnMap = Object.create(null);
 
   for (const header of headers) {
-    const key = HEADER_ALIASES[header.toLowerCase().replace(/\s+/g, " ")];
+    const normalized = header.toLowerCase().replace(/\s+/g, " ");
+    const key = Object.hasOwn(HEADER_ALIASES, normalized) ? HEADER_ALIASES[normalized] : undefined;
     if (key && key !== "skip" && !used.has(key)) {
       map[header] = key;
       used.add(key);

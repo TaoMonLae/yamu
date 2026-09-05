@@ -1,4 +1,5 @@
 import type { NameInput } from "@/lib/types";
+import { formatVariantCell } from "@/lib/variants";
 
 const MAX_SPELLING_LENGTH = 500;
 const MAX_NOTES_LENGTH = 2_000;
@@ -23,9 +24,9 @@ export function validateNameInput(input: unknown):
   }
 
   const value: NameInput = {
-    mon: candidate.mon.trim(),
-    burmese: candidate.burmese.trim(),
-    english: candidate.english.trim(),
+    mon: formatVariantCell(candidate.mon),
+    burmese: formatVariantCell(candidate.burmese),
+    english: formatVariantCell(candidate.english),
     notes: typeof candidate.notes === "string" ? candidate.notes.trim() : "",
     credit: typeof candidate.credit === "string" ? candidate.credit.trim() : "",
   };

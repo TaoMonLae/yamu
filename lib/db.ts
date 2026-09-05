@@ -76,6 +76,7 @@ function portableCell(value: PortableName["mon"]) {
 function initialCatalog(): NameInput[] {
   const candidates = [
     process.env.INITIAL_CATALOG_PATH,
+    jsonPath(),
     path.join(process.cwd(), "data", "names.json"),
     path.resolve(process.cwd(), "..", "..", "data", "names.json"),
   ].filter((candidate): candidate is string => Boolean(candidate));
@@ -154,6 +155,11 @@ export function getDb() {
   db = new Database(dbPath());
   db.pragma("journal_mode = WAL");
   db.exec(`
+    CREATE TABLE IF NOT EXISTS catalog_metadata (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS names (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       mon TEXT NOT NULL,
@@ -232,16 +238,25 @@ export function getDb() {
     .run("Nai, Naing", "Sample seed · 2 English variants");
   if (seedVariantMigration.changes > 0) exportNamesJson();
 
-  const count = db.prepare("SELECT COUNT(*) AS n FROM names").get() as { n: number };
-  if (count.n === 0) {
-    const bootstrapRecords = initialCatalog();
-    const records = bootstrapRecords.length > 0 ? bootstrapRecords : SEED_NAMES;
-    insertNames(records, "seed");
-    db.prepare(
-      "INSERT INTO imports (id, filename, row_count, created_at) VALUES (?, ?, ?, ?)",
-    ).run("seed", bootstrapRecords.length > 0 ? "names.json" : "seed.json", records.length, new Date().toISOString());
-    exportNamesJson();
-  }
+  const database = db;
+  const seeded = database.transaction(() => {
+    if (database.prepare("SELECT 1 FROM catalog_metadata WHERE key = 'initialized'").get()) return false;
+    // Existing import history also identifies a catalog that was intentionally
+    // emptied before this marker was introduced. Never seed it again.
+    const existing = database.prepare("SELECT 1 FROM names LIMIT 1").get()
+      || database.prepare("SELECT 1 FROM imports LIMIT 1").get();
+    if (!existing) {
+      const bootstrapRecords = initialCatalog();
+      const records = bootstrapRecords.length > 0 ? bootstrapRecords : SEED_NAMES;
+      insertNames(records, "seed");
+      database.prepare(
+        "INSERT INTO imports (id, filename, row_count, created_at) VALUES (?, ?, ?, ?)",
+      ).run("seed", bootstrapRecords.length > 0 ? "names.json" : "seed.json", records.length, new Date().toISOString());
+    }
+    database.prepare("INSERT INTO catalog_metadata (key, value) VALUES ('initialized', '1')").run();
+    return !existing;
+  })();
+  if (seeded) exportNamesJson();
 
   // Keep independently persisted production databases aligned with the
   // portable catalog cleanup. Only collapse name-identical rows when their
@@ -442,13 +457,21 @@ function concatenateVariants(groups: string[][], separator = " ", limit = 24) {
   return [...new Set(combinations.map((parts) => parts.join(separator)))];
 }
 
+export class TooManyNamePartsError extends Error {
+  constructor() {
+    super("Search for no more than 10 name parts at once.");
+    this.name = "TooManyNamePartsError";
+  }
+}
+
 export function searchNameQuery(query: string, source: SourceLanguage = "auto"): SearchResultSet {
   const normalizedQuery = query.trim().replace(/\s+/g, " ");
   if (!normalizedQuery) {
     return { results: [], mode: "single", tokens: [], missingTokens: [] };
   }
 
-  let tokens = normalizedQuery.split(" ").slice(0, 10);
+  let tokens = normalizedQuery.split(" ");
+  if (tokens.length > 10) throw new TooManyNamePartsError();
   let tokenSource = source;
   const exactWholeName = exactMatches(normalizedQuery, source);
   if (exactWholeName.length > 0) {
@@ -471,7 +494,8 @@ export function searchNameQuery(query: string, source: SourceLanguage = "auto"):
         missingTokens: [],
       };
     }
-    tokens = segmented.tokens.slice(0, 10);
+    tokens = segmented.tokens;
+    if (tokens.length > 10) throw new TooManyNamePartsError();
     tokenSource = segmented.source;
   }
 
@@ -705,10 +729,12 @@ export function replaceAllNames(records: NameInput[], batchId: string, filename:
 export function appendNames(records: NameInput[], batchId: string, filename: string) {
   const database = getDb();
   const createdAt = new Date().toISOString();
-  insertNames(records, batchId);
-  database
-    .prepare("INSERT INTO imports (id, filename, row_count, created_at) VALUES (?, ?, ?, ?)")
-    .run(batchId, filename, records.length, createdAt);
+  database.transaction(() => {
+    insertNames(records, batchId);
+    database
+      .prepare("INSERT INTO imports (id, filename, row_count, created_at) VALUES (?, ?, ?, ?)")
+      .run(batchId, filename, records.length, createdAt);
+  })();
 }
 
 export function lastImport() {
@@ -734,6 +760,9 @@ export function undoLastImport() {
   }
 
   const result = database.transaction(() => {
+    database.prepare(
+      "UPDATE suggestions SET linked_name_id = NULL WHERE linked_name_id IN (SELECT id FROM names WHERE batch_id = ?)",
+    ).run(latest.id);
     const deleted = database.prepare("DELETE FROM names WHERE batch_id = ?").run(latest.id);
     let restored = 0;
     if (existingBackup) {

@@ -39,6 +39,9 @@ jobs:
       - name: Check TypeScript
         run: npx tsc --noEmit
 
+      - name: Check catalog regressions
+        run: npm test
+
       - name: Build production application
         run: npm run build
 

@@ -377,7 +377,7 @@ msgid "Use the {day} example"
 msgstr "စကာ ဥပမာ {day}"
 
 msgid "Reading"
-msgstr "တော်ဒၟံၚ်"
+msgstr "ကိုန်"
 
 msgid "Good"
 msgstr "ခိုဟ်"

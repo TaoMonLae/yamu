@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchNameQuery } from "@/lib/db";
+import { searchNameQuery, TooManyNamePartsError } from "@/lib/db";
 import type { SourceLanguage } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -18,10 +18,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Search for no more than 10 name parts at once." }, { status: 400 });
   }
 
-  const result = searchNameQuery(q, safeSource);
-  return NextResponse.json({
-    query: q,
-    source: safeSource,
-    ...result,
-  });
+  try {
+    const result = searchNameQuery(q, safeSource);
+    return NextResponse.json({
+      query: q,
+      source: safeSource,
+      ...result,
+    });
+  } catch (error) {
+    if (error instanceof TooManyNamePartsError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    throw error;
+  }
 }
