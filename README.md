@@ -138,6 +138,7 @@ npm run dev                    # Start the development server
 npm run build                  # Create a production build
 npm start                      # Start the production server
 npm run lint                   # Run ESLint
+npx tsc --noEmit               # Check TypeScript
 npm run import:myanmar-names   # Import the fallback Myanmar name source
 ```
 
@@ -146,6 +147,8 @@ npm run import:myanmar-names   # Import the fallback Myanmar name source
 The app builds as a standalone Next.js server and stores its catalog on disk. The included guide covers Node.js, PM2, nginx, TLS, persistent data, and backups on Ubuntu.
 
 See [\`deploy/UBUNTU.md\`](deploy/UBUNTU.md) for the full deployment steps.
+
+GitHub Actions verifies pushes, pull requests, and published releases. A published pre-release is verification-only; a stable semantic release deploys its exact tag to the configured Ubuntu `production` environment.
 
 ## Security
 

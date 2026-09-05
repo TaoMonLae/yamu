@@ -96,3 +96,21 @@ Copy the catalog and branding files:
 - `/var/lib/mon-names/names.json`
 - `/var/lib/mon-names/branding.json`, when present
 - `/var/lib/mon-names/branding/`, when present
+
+## GitHub release deployment
+
+The repository includes two GitHub Actions workflows:
+
+- `CI` validates pushes to `main`, pull requests, and manual runs.
+- `Release` validates every published GitHub release. Pre-releases stop after validation; stable releases deploy to this Ubuntu host.
+
+Create a GitHub environment named `production`. Add these environment secrets:
+
+- `DEPLOY_HOST`: the Ubuntu server hostname or IP address
+- `DEPLOY_USER`: the unprivileged user that owns the application directory and can run PM2
+- `DEPLOY_SSH_KEY`: the private SSH deployment key
+- `DEPLOY_KNOWN_HOSTS`: the server's verified `known_hosts` line, collected from a trusted machine
+
+If SSH does not use port 22, add the environment variable `DEPLOY_PORT` with the correct port number. The deployment user must already be able to read the public GitHub repository, write `/var/www/mon-name-converter/yamu`, and manage the existing `mon-name-converter` PM2 process.
+
+Publishing `v2.0.0-rc.1` as a pre-release runs verification without deploying. Publishing a stable tag such as `v2.0.0` deploys that exact tagged commit, rebuilds the standalone server, restarts PM2, and checks the local HTTP endpoint.
