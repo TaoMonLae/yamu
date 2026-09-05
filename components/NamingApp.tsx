@@ -46,6 +46,7 @@ export function NamingApp() {
   const reading = useMemo(() => readMonName(name, birthDay), [birthDay, name]);
   const selectedDay = WEEKDAYS[birthDay - 1];
   const result = reading.outcome === "empty" ? null : OUTCOMES[reading.outcome];
+  const uiLang = lang === "mon" ? "mnw" : lang === "burmese" ? "my" : "en";
 
   function selectDay(day: BirthDay) {
     setBirthDay(day);
@@ -60,7 +61,7 @@ export function NamingApp() {
       <div className="hidden md:block"><SiteHeader lang={lang} onLang={changeLang} naming /></div>
       <NameSearchHeader lang={lang} onLang={changeLang} />
 
-      <main className="index-shell naming-index">
+      <main lang={uiLang} className="index-shell naming-index localized-interface">
         <nav className="naming-path" aria-label={tr("Naming page navigation")}>
           <Link href="/"><ArrowLeft size={16} aria-hidden />{tr("Name search")}</Link>
           <span className="micro-label text-ash">{tr("Old Mon naming method / 01")}</span>

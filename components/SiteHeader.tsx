@@ -31,9 +31,10 @@ export function SiteHeader({ lang, onLang, admin, about, naming }: Props) {
   const tr = (message: string) => translate(lang, message);
   const active: PublicPage = about ? "about" : naming ? "naming" : "search";
   const { branding } = useBranding();
+  const uiLang = lang === "mon" ? "mnw" : lang === "burmese" ? "my" : "en";
 
   return (
-    <header className="public-site-header sticky top-0 z-50 border-b border-ink bg-canvas">
+    <header lang={uiLang} className="public-site-header localized-interface sticky top-0 z-50 border-b border-ink bg-canvas">
       <div className="index-shell public-site-header__grid">
         <Link href="/" className="public-site-brand">
           {branding.logoUrl ? (

@@ -28,6 +28,14 @@ const z20KhitHaungg = localFont({
   display: "swap",
 });
 
+const z11MyanSans = localFont({
+  src: "../public/fonts/Z11-MyanSans-Regular.ttf",
+  weight: "400",
+  style: "normal",
+  variable: "--font-z11-myan-sans",
+  display: "swap",
+});
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -76,7 +84,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${z20KhitHaungg.variable} h-full antialiased`}
+      className={`${z20KhitHaungg.variable} ${z11MyanSans.variable} h-full antialiased`}
       style={themeStyle}
     >
       <head>

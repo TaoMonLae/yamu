@@ -11,7 +11,8 @@ import type { UiLanguage } from "@/lib/types";
 
 export function NameSearchHeader({ lang, onLang }: { lang: UiLanguage; onLang: (lang: UiLanguage) => void }) {
   const { branding } = useBranding();
-  return <header className="name-app-header md:hidden">
+  const uiLang = lang === "mon" ? "mnw" : lang === "burmese" ? "my" : "en";
+  return <header lang={uiLang} className="name-app-header localized-interface md:hidden">
     <Link href="/" className="name-app-brand"><BrandMark logoUrl={branding.logoUrl} className="h-7 w-7" /><span>{branding.siteName}</span></Link>
     <div className="name-app-tools">
       <select aria-label={translate(lang, "Interface language")} value={lang} onChange={(event) => onLang(event.target.value as UiLanguage)}>

@@ -410,7 +410,7 @@ msgid "Enter a Mon name to see its components. Punctuation and unsupported chara
 msgstr "စုတ်ယၟုမန် သွက်ဂွံသ္ၚေဝ်ရံၚ် အက္ခရ်ဂမၠိုၚ်ညိ။ သင်္ကေတ ကေုာံ မလိက်ဟွံကိတ်ညဳတအ်ဂှ် ဟွံစုတ် ပ္ဍဲလၟေၚ်ရ။"
 
 msgid "How the result is decided"
-msgstr "ရလဒ် ဒုၚ်သဇိုၚ် ကုမုရော"
+msgstr "သွဟ်ဂမၠိုၚ် ဒုၚ်သဇိုၚ် ကုမုရော"
 
 msgid "The whole pattern matters."
 msgstr "လၟေၚ်အက္ခရ် သီုဖအိုတ် ကိစ္စဇၞော်ရ။"
@@ -431,7 +431,7 @@ msgid "YAMU / The story behind the index"
 msgstr "YAMU / ပရူပရာ လက္ကရဴ လိက်ကၞပ်"
 
 msgid "Names connect us. People make it possible."
-msgstr "ယၟုဂမၠိုၚ် ဆက်စပ်ကဵုပိုဲ။ မၞိဟ်တံ ဖန်ဗဒှ်ကဵု ဒှ်ကၠုၚ်။"
+msgstr "ယၟု ဂှ် ဒှ်အရာဆက်စၠောံဇၞော် အကြာပွီပွိုၚ်မၞိဟ်ရ"
 
 msgid "A reference for names across Mon, Burmese, and English — built from a teacher's everyday question, and made better by people who care."
 msgstr "သ္ဇိုၚ်လိက်ကၞပ် ယၟုမန်၊ ဗၟာ၊ အင်္ဂလိက် — စကၠုၚ် နူတၚ်သၟာန် မသ္ၚေဝ်ဂၠာဲအ္စာဘာမွဲတၠတုဲ ကောန်ဂကူ မဆာန်လိက်တံ ထပ်ဗပေၚ်လဝ်ကဵုရ။"

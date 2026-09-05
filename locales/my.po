@@ -506,7 +506,7 @@ msgid "Contribute on GitHub"
 msgstr "GitHub တွင် ပါဝင်ကူညီရန်"
 
 msgid "Built with care for Mon names."
-msgstr "မွန်အမည်များကို မြတ်နိုးတန်ဖိုးထားလျက် ဖန်တီးထားသည်။"
+msgstr "မွန်အမည်များကို တန်ဖိုးထားချစ်မြတ်နိုး၍ ဖန်တီးထားခြင်းဖြစ်ပါသည်။"
 
 msgid "Team access"
 msgstr "အဖွဲ့ဝင် ဝင်ရောက်ခွင့်"

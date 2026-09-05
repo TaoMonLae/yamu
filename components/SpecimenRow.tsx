@@ -62,10 +62,11 @@ async function renderPng(
 
   const displayFont = canvasFont("--index-font-display", "Arial Narrow, sans-serif");
   const sansFont = canvasFont("--index-font-sans", "Arial, sans-serif");
-  const scriptFont = canvasFont("--font-z20-khit-haungg", '"Z20 KhitHaungg", sans-serif');
+  const monFont = canvasFont("--font-z20-khit-haungg", '"Z20 KhitHaungg", sans-serif');
+  const burmeseFont = canvasFont("--font-z11-myan-sans", '"Z11 MyanSans", sans-serif');
   const columns = [
-    { label: tr("Mon").toUpperCase(), value: selected.mon || tr("Not mapped").toUpperCase(), family: selected.mon ? scriptFont : sansFont },
-    { label: tr("Burmese").toUpperCase(), value: selected.burmese || tr("Not mapped").toUpperCase(), family: selected.burmese ? scriptFont : sansFont },
+    { label: tr("Mon").toUpperCase(), value: selected.mon || tr("Not mapped").toUpperCase(), family: selected.mon ? monFont : sansFont },
+    { label: tr("Burmese").toUpperCase(), value: selected.burmese || tr("Not mapped").toUpperCase(), family: selected.burmese ? burmeseFont : sansFont },
     { label: tr("English").toUpperCase(), value: selected.english || tr("Not mapped").toUpperCase(), family: sansFont },
   ];
 
@@ -88,7 +89,7 @@ async function renderPng(
   const brandSize = fitText(context, branding.siteName.toUpperCase(), 920, 52, displayFont, 700, 24);
   context.font = `700 ${brandSize}px ${displayFont}`;
   context.fillText(branding.siteName.toUpperCase(), brandTextX, 112);
-  context.font = `${branding.tagline ? 500 : 700} ${branding.tagline ? 22 : 28}px ${branding.tagline ? sansFont : scriptFont}`;
+  context.font = `${branding.tagline ? 500 : 700} ${branding.tagline ? 22 : 28}px ${branding.tagline ? sansFont : monFont}`;
   context.fillStyle = "#6f6c64";
   context.fillText(branding.tagline || tr("ယၟု / Mon / Burmese / English").toUpperCase(), brandTextX, 158);
 

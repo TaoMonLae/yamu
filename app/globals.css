@@ -102,7 +102,9 @@
   --page-max: 1240px;
   --index-font-sans: "Helvetica Neue", Arial, "Noto Sans Myanmar", ui-sans-serif, system-ui, sans-serif;
   --index-font-display: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, "Noto Sans Myanmar", sans-serif;
-  --index-font-script: var(--font-z20-khit-haungg), "Z20 KhitHaungg", "KhitHaungg", "Pyidaungsu", sans-serif;
+  --index-font-mon: var(--font-z20-khit-haungg), "Z20 KhitHaungg", "KhitHaungg", "Pyidaungsu", sans-serif;
+  --index-font-burmese: var(--font-z11-myan-sans), "Z11 MyanSans", "Myanmar Text", "Pyidaungsu", sans-serif;
+  --index-font-script: var(--index-font-mon);
   --duration-fast: 120ms;
   --duration-default: 200ms;
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -405,7 +407,7 @@ select:not(:disabled) {
 }
 
 .font-script {
-  font-family: var(--index-font-script);
+  font-family: var(--index-font-mon);
   font-kerning: normal;
   font-feature-settings: "kern" 1, "liga" 1;
   letter-spacing: 0;
@@ -415,12 +417,72 @@ select:not(:disabled) {
 
 .font-script-display {
   padding-block: 0.1em 0.16em;
-  font-family: var(--index-font-script);
+  font-family: var(--index-font-mon);
   font-kerning: normal;
   font-feature-settings: "kern" 1, "liga" 1;
   letter-spacing: 0;
   line-height: 1.42;
   text-rendering: optimizeLegibility;
+}
+
+.font-script:lang(my),
+.font-script-display:lang(my) {
+  font-family: var(--index-font-burmese);
+}
+
+.font-script:lang(mnw),
+.font-script-display:lang(mnw) {
+  font-family: var(--index-font-mon);
+}
+
+/* Each translated surface carries its language so display copy gets the correct
+   local font without changing English names or explicitly tagged content. */
+.localized-interface:lang(mnw) {
+  font-family: var(--index-font-mon);
+}
+
+.localized-interface:lang(my) {
+  font-family: var(--index-font-burmese);
+}
+
+.localized-interface :where(h1, h2, h3):lang(mnw),
+.localized-interface :where(h1, h2, h3):lang(my) {
+  padding-block: 0.08em 0.14em;
+  letter-spacing: 0;
+  line-height: 1.42;
+  text-wrap: balance;
+}
+
+.localized-interface :where(h1, h2, h3, p, a, button, label, select):lang(mnw) {
+  font-family: var(--index-font-mon);
+}
+
+.localized-interface :where(h1, h2, h3, p, a, button, label, select):lang(my) {
+  font-family: var(--index-font-burmese);
+}
+
+.localized-interface :where(p, a, button, label, select):lang(mnw),
+.localized-interface :where(p, a, button, label, select):lang(my) {
+  letter-spacing: 0;
+}
+
+.localized-interface :where(.micro-label, .font-display):lang(mnw),
+.localized-interface :where(.micro-label, .font-display):lang(my) {
+  letter-spacing: 0;
+  line-height: 1.55;
+  text-transform: none;
+}
+
+.localized-interface :where(.public-site-nav a, .public-sign-in, .public-admin-label, .public-language-select > span, .public-language-select select):lang(mnw),
+.localized-interface :where(.public-site-nav a, .public-sign-in, .public-admin-label, .public-language-select > span, .public-language-select select):lang(my) {
+  letter-spacing: 0;
+  line-height: 1.5;
+  text-transform: none;
+}
+
+.about-index.localized-interface :where(.about-lead, .about-story-copy > p, .about-person-bio, .about-contribution > p, .about-invitation p):lang(mnw),
+.about-index.localized-interface :where(.about-lead, .about-story-copy > p, .about-person-bio, .about-contribution > p, .about-invitation p):lang(my) {
+  line-height: 1.85;
 }
 
 .text-balance {

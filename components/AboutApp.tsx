@@ -40,11 +40,12 @@ export function AboutApp() {
     window.localStorage.setItem("ui-lang", next);
   }
   const tr = (message: string, variables?: Record<string, string | number>) => translate(lang, message, variables);
+  const uiLang = lang === "mon" ? "mnw" : lang === "burmese" ? "my" : "en";
 
   return <div className="min-h-screen">
     <div className="hidden md:block"><SiteHeader lang={lang} onLang={changeLang} about /></div>
     <NameSearchHeader lang={lang} onLang={changeLang} />
-    <main className="index-shell about-index">
+    <main lang={uiLang} className="index-shell about-index localized-interface">
       <nav className="about-path" aria-label={tr("About page navigation")}>
         <Link href="/"><ArrowLeft size={16} aria-hidden />{tr("Name search")}</Link>
         <a href="#people">{tr("The people")}<ArrowRight size={16} aria-hidden /></a>

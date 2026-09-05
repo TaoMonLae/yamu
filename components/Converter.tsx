@@ -135,7 +135,7 @@ export function Converter() {
       <div className="hidden md:block"><SiteHeader lang={lang} onLang={changeLang} /></div>
       <NameSearchHeader lang={lang} onLang={changeLang} />
 
-      <main className="index-shell name-index">
+      <main lang={uiLang} className="index-shell name-index localized-interface">
         <section aria-labelledby="lookup-heading" className="name-search-area">
           <div className="name-search-title">
             <h1 id="lookup-heading" lang={uiLang} className={usesMyanmarScript ? "font-script" : ""}>{lang === "english" ? tr("Find a name.") : copy.lookup}</h1>
@@ -164,7 +164,7 @@ export function Converter() {
                 </button>)}
               </fieldset>
               <div className="name-samples"><span>{copy.tryName}</span>{SAMPLES.map((sample) =>
-                <button type="button" key={sample} onClick={() => trySample(sample)} className={sample === "Aung" ? "" : "font-script"}>{sample}</button>)}</div>
+                <button type="button" key={sample} lang={sample === "Aung" ? "en" : sample === "နိုင်" ? "my" : "mnw"} onClick={() => trySample(sample)} className={sample === "Aung" ? "" : "font-script"}>{sample}</button>)}</div>
             </div>
           </form>
         </section>

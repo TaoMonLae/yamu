@@ -14,8 +14,9 @@ const ITEMS = [
 ] as const;
 
 export function PublicMobileNav({ active, lang }: { active: PublicPage; lang: UiLanguage }) {
+  const uiLang = lang === "mon" ? "mnw" : lang === "burmese" ? "my" : "en";
   return (
-    <nav className="public-mobile-nav md:hidden" aria-label={translate(lang, "Public pages")}>
+    <nav lang={uiLang} className="public-mobile-nav localized-interface md:hidden" aria-label={translate(lang, "Public pages")}>
       {ITEMS.map((item) => {
         const Icon = item.icon;
         return (
