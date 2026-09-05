@@ -4,7 +4,22 @@ import { useEffect } from "react";
 
 export function PwaRegistration() {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
+    if (!("serviceWorker" in navigator)) return;
+
+    if (process.env.NODE_ENV !== "production") {
+      const clearDevelopmentWorker = async () => {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+        if ("caches" in window) {
+          const keys = await window.caches.keys();
+          await Promise.all(keys.filter((key) => key.startsWith("yamu-")).map((key) => window.caches.delete(key)));
+        }
+      };
+      void clearDevelopmentWorker().catch((error) => {
+        console.warn("Yamu development cache cleanup failed.", error);
+      });
+      return;
+    }
 
     const register = async () => {
       try {

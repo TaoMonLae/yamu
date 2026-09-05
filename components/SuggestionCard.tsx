@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ShinyText } from "@/components/reactbits/ShinyText";
 import { SpotlightCard } from "@/components/reactbits/SpotlightCard";
-import { t } from "@/lib/i18n";
+import { t, translate } from "@/lib/i18n";
 import type { Language, UiLanguage } from "@/lib/types";
 
 type Props = {
@@ -23,6 +23,7 @@ const EMPTY_SPELLINGS: Record<Language, string> = { mon: "", burmese: "", englis
 
 export function SuggestionCard({ query, missingTokens, initialSource, lang, onCancel }: Props) {
   const copy = t(lang);
+  const tr = (message: string, variables?: Record<string, string | number>) => translate(lang, message, variables);
   const initialText = missingTokens.length === 1 ? missingTokens[0] : query.trim();
   const [text, setText] = useState(initialText);
   const [source, setSource] = useState<Language>(initialSource);
@@ -64,11 +65,11 @@ export function SuggestionCard({ query, missingTokens, initialSource, lang, onCa
         body: JSON.stringify({ kind: "word", text, source, spellings: { ...spellings, [source]: text }, context, note, contributorName }),
       });
       const data = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(data.error || "Could not send the suggestion.");
+      if (!response.ok) throw new Error(data.error || tr("Could not send the suggestion."));
       if (contributorName.trim()) window.localStorage.setItem("yamu-contributor-name", contributorName.trim());
       setSent(true);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Could not send the suggestion.");
+      setError(submitError instanceof Error ? submitError.message : tr("Could not send the suggestion."));
     } finally {
       setBusy(false);
     }
@@ -79,8 +80,8 @@ export function SuggestionCard({ query, missingTokens, initialSource, lang, onCa
       <div className="grid border-b border-ink md:grid-cols-[164px_1fr]">
         <div className="flex items-end justify-between border-b border-ink bg-ink px-5 py-5 text-canvas md:block md:border-b-0 md:border-r">
           <div>
-            <p className="font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-canvas/60">Contribution ticket</p>
-            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-canvas/40">Word desk</p>
+            <p className="font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-canvas/60">{tr("Contribution ticket")}</p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-canvas/40">{tr("Word desk")}</p>
           </div>
           <p className="font-display text-[42px] font-semibold leading-none md:mt-10">+01</p>
         </div>
@@ -91,10 +92,10 @@ export function SuggestionCard({ query, missingTokens, initialSource, lang, onCa
               {copy.cancelSuggestion} ×
             </button>
           </div>
-          <p className="mt-3 max-w-[64ch] text-[13px] leading-6 text-ash">One spelling is enough. Add the matching forms only if you know them; the catalog desk verifies every entry.</p>
+          <p className="mt-3 max-w-[64ch] text-[13px] leading-6 text-ash">{tr("One spelling is enough. Add the matching forms only if you know them; the catalog desk verifies every entry.")}</p>
           {missingTokens.length > 1 ? (
             <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-pewter pt-4">
-              <span className="micro-label text-stone">Choose missing word</span>
+              <span className="micro-label text-stone">{tr("Choose missing word")}</span>
               {missingTokens.map((token, index) => (
                 <button key={`${token}-${index}`} type="button" onClick={() => { setText(token); setSent(false); }} className={`border-b pb-1 text-[18px] font-semibold ${text === token ? "border-accent text-ink" : "border-pewter text-ash"} ${/[\u1000-\u109f\uaa60-\uaa7f]/u.test(token) ? "font-script" : ""}`}>{token}</button>
               ))}
@@ -107,21 +108,21 @@ export function SuggestionCard({ query, missingTokens, initialSource, lang, onCa
         <div className="result-enter grid md:grid-cols-[164px_1fr]">
           <div className="h-2 bg-accent md:h-auto" />
           <div className="px-5 py-8 sm:px-7">
-            <p className="font-display text-[12px] font-semibold uppercase tracking-[0.08em] text-success"><ShinyText>Ticket received</ShinyText></p>
-            <p className="mt-3 text-[20px] font-semibold tracking-[-0.02em] text-ink">Thank you for helping the catalog grow.</p>
-            <p className="mt-2 text-[12px] leading-5 text-ash">{contributorName.trim() ? `If approved, this entry will show “Contributed by ${contributorName.trim()}.”` : "An admin will verify the three spellings before the entry appears in search."}</p>
-            <button type="button" onClick={() => { setSent(false); setNote(""); setSpellings(EMPTY_SPELLINGS); }} className="micro-label mt-5 border-b border-ink pb-1 text-ink">Add another word +</button>
+            <p className="font-display text-[12px] font-semibold uppercase tracking-[0.08em] text-success"><ShinyText>{tr("Ticket received")}</ShinyText></p>
+            <p className="mt-3 text-[20px] font-semibold tracking-[-0.02em] text-ink">{tr("Thank you for helping the catalog grow.")}</p>
+            <p className="mt-2 text-[12px] leading-5 text-ash">{contributorName.trim() ? tr("If approved, this entry will show “Contributed by {name}.”", { name: contributorName.trim() }) : tr("An admin will verify the three spellings before the entry appears in search.")}</p>
+            <button type="button" onClick={() => { setSent(false); setNote(""); setSpellings(EMPTY_SPELLINGS); }} className="micro-label mt-5 border-b border-ink pb-1 text-ink">{tr("Add another word")} +</button>
           </div>
         </div>
       ) : (
         <form onSubmit={submit}>
           <div className="grid border-b border-pewter lg:grid-cols-[minmax(0,1fr)_330px]">
             <label className="px-5 py-5 text-ash sm:px-7">
-              <span className="micro-label">Word or name</span>
+              <span className="micro-label">{tr("Word or name")}</span>
               <input required autoFocus maxLength={80} lang={source === "mon" ? "mnw" : source === "burmese" ? "my" : "en"} value={text} onChange={(event) => setText(event.target.value)} className={`mt-3 h-16 w-full border-b-2 border-ink bg-transparent px-0 text-[30px] font-semibold text-ink outline-none focus:border-accent ${source === "english" ? "font-sans tracking-[-0.02em]" : "font-script"}`} />
             </label>
             <fieldset className="border-t border-pewter px-5 py-5 lg:border-l lg:border-t-0">
-              <legend className="micro-label px-0 text-ash">Written in</legend>
+              <legend className="micro-label px-0 text-ash">{tr("Written in")}</legend>
               <div className="mt-3 grid grid-cols-3">
                 {SOURCE_OPTIONS.map((option) => (
                   <button key={option.value} type="button" aria-pressed={source === option.value} onClick={() => setSource(option.value)} className={`min-h-14 border border-r-0 border-ink px-2 text-left last:border-r ${source === option.value ? "bg-ink text-canvas" : "bg-paper text-ink hover:bg-mist"}`}>
@@ -135,7 +136,7 @@ export function SuggestionCard({ query, missingTokens, initialSource, lang, onCa
 
           <div className="border-b border-pewter px-5 py-5 sm:px-7">
             <button type="button" aria-expanded={showMore} aria-controls="additional-spellings" onClick={() => setShowMore((current) => !current)} className="flex w-full items-center justify-between gap-4 text-left">
-              <span><span className="font-display text-[13px] font-semibold uppercase tracking-[0.05em] text-ink">I know another spelling</span><span className="mt-1 block text-[11px] text-ash">Optional Mon, Burmese, or English forms</span></span>
+              <span><span className="font-display text-[13px] font-semibold uppercase tracking-[0.05em] text-ink">{tr("I know another spelling")}</span><span className="mt-1 block text-[11px] text-ash">{tr("Optional Mon, Burmese, or English forms")}</span></span>
               <span className="font-display text-[22px] text-accent" aria-hidden="true">{showMore ? "−" : "+"}</span>
             </button>
             {showMore ? (
@@ -151,21 +152,21 @@ export function SuggestionCard({ query, missingTokens, initialSource, lang, onCa
 
           <div className="grid border-b border-pewter md:grid-cols-2">
             <label className="px-5 py-5 text-ash sm:px-7 md:border-r md:border-pewter">
-              <span className="micro-label">Credit name <span className="text-stone">/ optional</span></span>
-              <input maxLength={80} autoComplete="name" value={contributorName} onChange={(event) => setContributorName(event.target.value)} placeholder="Name shown after approval" className="mt-2 h-12 w-full border border-pewter bg-paper px-3 font-sans text-[14px] font-normal normal-case tracking-normal text-ink outline-none placeholder:text-stone focus:border-accent" />
-              <span className="mt-2 block text-[10px] leading-4 text-stone">Public only if the word is approved. No email required.</span>
+              <span className="micro-label">{tr("Credit name")} <span className="text-stone">/ {tr("optional")}</span></span>
+              <input maxLength={80} autoComplete="name" value={contributorName} onChange={(event) => setContributorName(event.target.value)} placeholder={tr("Name shown after approval")} className="mt-2 h-12 w-full border border-pewter bg-paper px-3 font-sans text-[14px] font-normal normal-case tracking-normal text-ink outline-none placeholder:text-stone focus:border-accent" />
+              <span className="mt-2 block text-[10px] leading-4 text-stone">{tr("Public only if the word is approved. No email required.")}</span>
             </label>
             <label className="border-t border-pewter px-5 py-5 text-ash sm:px-7 md:border-t-0">
-              <span className="micro-label">Helpful note <span className="text-stone">/ optional</span></span>
-              <textarea rows={2} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Pronunciation, source, or where you saw it" className="mt-2 w-full resize-y border border-pewter bg-paper px-3 py-3 font-sans text-[13px] font-normal normal-case tracking-normal text-ink outline-none placeholder:text-stone focus:border-accent" />
+              <span className="micro-label">{tr("Helpful note")} <span className="text-stone">/ {tr("optional")}</span></span>
+              <textarea rows={2} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} placeholder={tr("Pronunciation, source, or where you saw it")} className="mt-2 w-full resize-y border border-pewter bg-paper px-3 py-3 font-sans text-[13px] font-normal normal-case tracking-normal text-ink outline-none placeholder:text-stone focus:border-accent" />
             </label>
           </div>
 
           <div className="flex flex-col gap-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-            <p className="text-[10px] uppercase tracking-[0.09em] text-stone">Review queue · credit after approval</p>
-            <button type="submit" disabled={busy || !text.trim()} className="min-h-12 bg-accent px-6 font-display text-[12px] font-semibold uppercase tracking-[0.06em] text-on-accent transition-colors hover:bg-[var(--index-accent-dark)] disabled:opacity-50">{busy ? "Sending…" : "Send contribution →"}</button>
+            <p className="text-[10px] uppercase tracking-[0.09em] text-stone">{tr("Review queue · credit after approval")}</p>
+            <button type="submit" disabled={busy || !text.trim()} className="min-h-12 bg-accent px-6 font-display text-[12px] font-semibold uppercase tracking-[0.06em] text-on-accent transition-colors hover:bg-[var(--index-accent-dark)] disabled:opacity-50">{busy ? tr("Sending…") : tr("Send contribution →")}</button>
           </div>
-          {context ? <p className="border-t border-pewter px-5 py-3 text-[11px] text-ash sm:px-7">Found while searching: <span className={/[\u1000-\u109f\uaa60-\uaa7f]/u.test(context) ? "font-script text-ink" : "text-ink"}>{context}</span></p> : null}
+          {context ? <p className="border-t border-pewter px-5 py-3 text-[11px] text-ash sm:px-7">{tr("Found while searching:")} <span className={/[\u1000-\u109f\uaa60-\uaa7f]/u.test(context) ? "font-script text-ink" : "text-ink"}>{context}</span></p> : null}
           {error ? <p role="alert" className="border-t border-accent px-5 py-3 text-[12px] text-accent sm:px-7">{error}</p> : null}
         </form>
       )}

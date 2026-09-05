@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronRight, Copy, Download, X } from "lucide-react";
 import { useBranding } from "@/components/BrandingProvider";
-import { t } from "@/lib/i18n";
+import { t, translate } from "@/lib/i18n";
 import type { BrandSettings, Language, NameRecord, UiLanguage } from "@/lib/types";
 
 type Props = {
@@ -35,11 +35,11 @@ function fitText(
   return Math.max(minSize, Math.min(maxSize, maxSize * (maxWidth / naturalWidth)));
 }
 
-function loadCanvasImage(url: string) {
+function loadCanvasImage(url: string, errorMessage: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Could not load the brand logo."));
+    image.onerror = () => reject(new Error(errorMessage));
     image.src = url;
   });
 }
@@ -49,22 +49,24 @@ async function renderPng(
   selected: SelectedSpellings,
   specimenNumber: number,
   branding: BrandSettings,
+  lang: UiLanguage,
 ) {
+  const tr = (message: string, variables?: Record<string, string | number>) => translate(lang, message, variables);
   await document.fonts.ready;
 
   const canvas = document.createElement("canvas");
   canvas.width = 1800;
   canvas.height = 1080;
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("Canvas is not available.");
+  if (!context) throw new Error(tr("Canvas is not available."));
 
   const displayFont = canvasFont("--index-font-display", "Arial Narrow, sans-serif");
   const sansFont = canvasFont("--index-font-sans", "Arial, sans-serif");
   const scriptFont = canvasFont("--font-z20-khit-haungg", '"Z20 KhitHaungg", sans-serif');
   const columns = [
-    { label: "MON", value: selected.mon || "NOT MAPPED", family: selected.mon ? scriptFont : sansFont },
-    { label: "BURMESE", value: selected.burmese || "NOT MAPPED", family: selected.burmese ? scriptFont : sansFont },
-    { label: "ENGLISH", value: selected.english || "NOT MAPPED", family: sansFont },
+    { label: tr("Mon").toUpperCase(), value: selected.mon || tr("Not mapped").toUpperCase(), family: selected.mon ? scriptFont : sansFont },
+    { label: tr("Burmese").toUpperCase(), value: selected.burmese || tr("Not mapped").toUpperCase(), family: selected.burmese ? scriptFont : sansFont },
+    { label: tr("English").toUpperCase(), value: selected.english || tr("Not mapped").toUpperCase(), family: sansFont },
   ];
 
   context.fillStyle = "#fafaf6";
@@ -74,7 +76,7 @@ async function renderPng(
 
   let brandTextX = 88;
   if (branding.logoUrl) {
-    const logo = await loadCanvasImage(branding.logoUrl);
+    const logo = await loadCanvasImage(branding.logoUrl, tr("Could not load the brand logo."));
     const ratio = Math.min(64 / logo.naturalWidth, 64 / logo.naturalHeight);
     const logoWidth = logo.naturalWidth * ratio;
     const logoHeight = logo.naturalHeight * ratio;
@@ -88,12 +90,12 @@ async function renderPng(
   context.fillText(branding.siteName.toUpperCase(), brandTextX, 112);
   context.font = `${branding.tagline ? 500 : 700} ${branding.tagline ? 22 : 28}px ${branding.tagline ? sansFont : scriptFont}`;
   context.fillStyle = "#6f6c64";
-  context.fillText(branding.tagline || "ယၟု / MON / BURMESE / ENGLISH", brandTextX, 158);
+  context.fillText(branding.tagline || tr("ယၟု / Mon / Burmese / English").toUpperCase(), brandTextX, 158);
 
   context.textAlign = "right";
   context.font = `600 22px ${displayFont}`;
   context.fillStyle = "#11100e";
-  context.fillText(`SPECIMEN ${String(specimenNumber).padStart(3, "0")}`, 1712, 112);
+  context.fillText(tr("Specimen {number}", { number: String(specimenNumber).padStart(3, "0") }).toUpperCase(), 1712, 112);
   context.textAlign = "left";
 
   context.strokeStyle = "#11100e";
@@ -125,27 +127,27 @@ async function renderPng(
     context.fillRect(x + 42, 805, 30, 5);
     context.fillStyle = "#6f6c64";
     context.font = `500 18px ${sansFont}`;
-    context.fillText("SELECTED SPELLING", x + 86, 815);
+    context.fillText(tr("Selected spelling").toUpperCase(), x + 86, 815);
   });
 
   context.fillStyle = "#11100e";
   context.font = `600 21px ${displayFont}`;
-  context.fillText("NOTE", 88, 946);
+  context.fillText(tr("Note").toUpperCase(), 88, 946);
   context.font = `400 22px ${sansFont}`;
   context.fillStyle = "#6f6c64";
-  context.fillText(row.notes || "Catalog entry", 168, 946);
+  context.fillText(row.notes || tr("Catalog entry"), 168, 946);
   if (row.credit) {
     context.font = `600 17px ${displayFont}`;
     context.fillStyle = branding.accentColor;
-    context.fillText(`CONTRIBUTED BY ${row.credit.toUpperCase()}`, 88, 994);
+    context.fillText(tr("Contributed by {name}", { name: row.credit }).toUpperCase(), 88, 994);
   }
   context.textAlign = "right";
-  context.fillText(`${branding.siteName.toUpperCase()} · TRILINGUAL PROOF`, 1712, 946);
+  context.fillText(`${branding.siteName.toUpperCase()} · ${tr("Trilingual proof").toUpperCase()}`, 1712, 946);
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((value) => {
       if (value) resolve(value);
-      else reject(new Error("Could not render PNG."));
+      else reject(new Error(tr("Could not render PNG.")));
     }, "image/png");
   });
 
@@ -161,6 +163,7 @@ async function renderPng(
 export function SpecimenRow({ row, lang, index }: Props) {
   const { branding } = useBranding();
   const copy = t(lang);
+  const tr = (message: string, variables?: Record<string, string | number>) => translate(lang, message, variables);
   const [selected, setSelected] = useState<SelectedSpellings>({
     mon: row.monVariants[0] ?? row.mon,
     burmese: row.burmeseVariants[0] ?? row.burmese,
@@ -202,7 +205,7 @@ export function SpecimenRow({ row, lang, index }: Props) {
 
   async function copyValue(key: Language) {
     try { await navigator.clipboard.writeText(selected[key]); }
-    catch { setExportError("Could not copy. Please select and copy the spelling manually."); return; }
+    catch { setExportError(tr("Could not copy. Please select and copy the spelling manually.")); return; }
     setCopied(key);
     window.setTimeout(() => setCopied(null), 1200);
   }
@@ -211,9 +214,9 @@ export function SpecimenRow({ row, lang, index }: Props) {
     setExporting(true);
     setExportError("");
     try {
-      await renderPng(row, selected, index, branding);
+      await renderPng(row, selected, index, branding, lang);
     } catch (error) {
-      setExportError(error instanceof Error ? error.message : "Could not export PNG.");
+      setExportError(error instanceof Error ? error.message : tr("Could not export PNG."));
     } finally {
       setExporting(false);
     }
@@ -240,7 +243,7 @@ export function SpecimenRow({ row, lang, index }: Props) {
         ))}
       </div>
       <div className="name-detail-footer">
-        <div><p>{copy.notes}: {row.notes || "—"}</p>{row.credit ? <p className="mt-1 text-stone">Contributed by {row.credit}</p> : null}</div>
+        <div><p>{copy.notes}: {row.notes || "—"}</p>{row.credit ? <p className="mt-1 text-stone">{tr("Contributed by {name}", { name: row.credit })}</p> : null}</div>
         <button type="button" disabled={exporting} onClick={() => void exportName()} className="name-export">
           <Download size={16} aria-hidden />{exporting ? copy.exporting : copy.export}
         </button>
@@ -273,7 +276,7 @@ export function SpecimenRow({ row, lang, index }: Props) {
         onClick={(event) => { if (event.target === event.currentTarget) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientY < rect.top) setSheetOpen(false); } }}>
         <div className="name-sheet-header">
           <h2 id={`${detailId}-sheet-title`} className="font-script">{selected.mon} <span className="font-display">/ {selected.english}</span></h2>
-          <button type="button" autoFocus onClick={() => setSheetOpen(false)} aria-label="Close"><X size={20} /></button>
+          <button type="button" autoFocus onClick={() => setSheetOpen(false)} aria-label={tr("Close")}><X size={20} /></button>
         </div>
         {details}
         {exportError ? <p role="alert" className="px-4 py-3 text-sm text-accent">{exportError}</p> : null}

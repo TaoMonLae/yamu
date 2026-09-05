@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const STATIC_CACHE = `yamu-static-${CACHE_VERSION}`;
 const PAGE_CACHE = `yamu-pages-${CACHE_VERSION}`;
 const PRECACHE_URLS = [

@@ -3,10 +3,11 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Search, X, ArrowRight } from "lucide-react";
 import { NameSearchHeader } from "@/components/NameSearchHeader";
+import { PublicMobileNav } from "@/components/PublicMobileNav";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SpecimenRow } from "@/components/SpecimenRow";
 import { SuggestionCard } from "@/components/SuggestionCard";
-import { t } from "@/lib/i18n";
+import { t, translate } from "@/lib/i18n";
 import { detectSource } from "@/lib/script";
 import type { NameRecord, SearchResultSet, SourceLanguage, UiLanguage } from "@/lib/types";
 
@@ -38,6 +39,7 @@ export function Converter() {
   const lookupVersion = useRef(0);
   const lookupAbort = useRef<AbortController | null>(null);
   const copy = t(lang);
+  const tr = (message: string, variables?: Record<string, string | number>) => translate(lang, message, variables);
   const usesMyanmarScript = lang !== "english";
   const queryUsesMyanmarScript = /[\u1000-\u109f\uaa60-\uaa7f]/u.test(query);
   const uiLang = lang === "mon" ? "mnw" : lang === "burmese" ? "my" : "en";
@@ -74,7 +76,7 @@ export function Converter() {
       const params = new URLSearchParams({ q: value, source: nextSource });
       const response = await fetch(`/api/search?${params}`, { signal: controller.signal });
       const data = (await response.json()) as SearchResultSet & { error?: string };
-      if (!response.ok) throw new Error(data.error || "Search is temporarily unavailable.");
+      if (!response.ok) throw new Error(data.error || tr("Search is temporarily unavailable."));
       if (requestVersion !== lookupVersion.current) return;
       setResults(data.results);
       setSearchMeta({ mode: data.mode, tokens: data.tokens, missingTokens: data.missingTokens });
@@ -84,7 +86,7 @@ export function Converter() {
       if (requestVersion !== lookupVersion.current) return;
       setResults([]);
       setSearchMeta({ mode: "single", tokens: [], missingTokens: [] });
-      setError(lookupError instanceof Error ? lookupError.message : "Search failed.");
+      setError(lookupError instanceof Error ? lookupError.message : tr("Search failed."));
     } finally {
       if (requestVersion === lookupVersion.current) setPending(false);
     }
@@ -116,11 +118,11 @@ export function Converter() {
   }
 
   const status = useMemo(() => {
-    if (pending) return "INDEXING…";
+    if (pending) return translate(lang, "Indexing…");
     if (results === null) return copy.empty;
     if (!results.length) return copy.none;
     return `${String(results.length).padStart(2, "0")} ${copy.matches}`;
-  }, [copy.empty, copy.matches, copy.none, pending, results]);
+  }, [copy.empty, copy.matches, copy.none, lang, pending, results]);
 
   const suggestionSource = source === "auto"
     ? detectSource(searchMeta.missingTokens[0] ?? query) === "burmese" && lang === "mon"
@@ -136,7 +138,7 @@ export function Converter() {
       <main className="index-shell name-index">
         <section aria-labelledby="lookup-heading" className="name-search-area">
           <div className="name-search-title">
-            <h1 id="lookup-heading" lang={uiLang} className={usesMyanmarScript ? "font-script" : ""}>{lang === "english" ? "Find a name." : copy.lookup}</h1>
+            <h1 id="lookup-heading" lang={uiLang} className={usesMyanmarScript ? "font-script" : ""}>{lang === "english" ? tr("Find a name.") : copy.lookup}</h1>
             <p lang={uiLang}>{copy.tagline}</p>
           </div>
           <form onSubmit={onSubmit} role="search">
@@ -147,7 +149,7 @@ export function Converter() {
                 value={query} maxLength={200} autoComplete="off" spellCheck={false}
                 onChange={(event) => { setSuggesting(false); setQuery(event.target.value); }}
                 placeholder={copy.placeholder} className={queryUsesMyanmarScript ? "font-script" : ""} />
-              {query ? <button type="button" className="name-clear" aria-label="Clear search"
+              {query ? <button type="button" className="name-clear" aria-label={tr("Clear search")}
                 onClick={() => { setQuery(""); setSuggesting(false); document.getElementById("name-query")?.focus(); }}><X size={18} /></button> : null}
               <button type="submit" disabled={pending} className="name-submit" aria-label={copy.search}>
                 <span>{pending ? "…" : copy.search}</span><ArrowRight size={22} aria-hidden />
@@ -172,7 +174,7 @@ export function Converter() {
             <p role="status" lang={uiLang} className={`text-ash ${usesMyanmarScript ? "font-script text-[12px]" : "micro-label"}`}>{status}</p>
             {results?.length ? (
               <p className="hidden text-[11px] uppercase tracking-[0.08em] text-stone sm:block">
-                Searched “{query.trim()}”
+                {tr("Searched “{query}”", { query: query.trim() })}
               </p>
             ) : null}
           </div>
@@ -194,7 +196,7 @@ export function Converter() {
                   <p lang={uiLang} className={usesMyanmarScript ? "font-script text-[13px]" : "micro-label text-canvas/60"}>{copy.composed}</p>
                   <p className={`mt-2 text-[15px] ${queryUsesMyanmarScript ? "font-script" : ""}`}>{searchMeta.tokens.join(" + ")}</p>
                 </div>
-                <p className="px-4 py-4 text-[11px] uppercase tracking-[0.08em] text-canvas/60">Order preserved</p>
+                <p className="px-4 py-4 text-[11px] uppercase tracking-[0.08em] text-canvas/60">{tr("Order preserved")}</p>
               </div>
             ) : null}
             {results?.map((row, index) => (
@@ -212,7 +214,7 @@ export function Converter() {
             ) : (
               <div className="grid border border-ink bg-paper sm:grid-cols-[104px_minmax(0,1fr)_auto] sm:items-stretch">
                 <div className="flex items-center justify-between bg-ink px-5 py-4 text-canvas sm:block sm:px-4 sm:py-5">
-                  <p className="font-display text-[10px] font-semibold uppercase tracking-[0.1em] text-canvas/55">No match</p>
+                  <p className="font-display text-[10px] font-semibold uppercase tracking-[0.1em] text-canvas/55">{tr("No match")}</p>
                   <p className="font-display text-[30px] font-semibold leading-none text-accent sm:mt-3">00</p>
                 </div>
                 <div className="border-b border-ink px-5 py-5 sm:border-b-0 sm:border-r sm:px-6">
@@ -231,6 +233,7 @@ export function Converter() {
           </div>
         </section>
       </main>
+      <PublicMobileNav active="search" lang={lang} />
     </div>
   );
 }

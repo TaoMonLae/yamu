@@ -243,7 +243,51 @@ export function getDb() {
     exportNamesJson();
   }
 
+  // Keep independently persisted production databases aligned with the
+  // portable catalog cleanup. Only collapse name-identical rows when their
+  // non-empty editorial metadata does not conflict.
+  if (deduplicateExactNames(db) > 0) exportNamesJson();
+
   return db;
+}
+
+function deduplicateExactNames(database: Database.Database) {
+  const rows = database.prepare("SELECT * FROM names ORDER BY id").all() as NameRow[];
+  const groups = new Map<string, NameRow[]>();
+  const canonicalCell = (value: string) => parseVariantCell(value)
+    .map((variant) => normalizeLookup(variant))
+    .sort()
+    .join("\u001f");
+
+  for (const row of rows) {
+    const key = [row.mon, row.burmese, row.english].map(canonicalCell).join("\u001e");
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  }
+
+  return database.transaction(() => {
+    let removed = 0;
+    for (const group of groups.values()) {
+      if (group.length < 2) continue;
+      const notes = [...new Set(group.map((row) => row.notes.trim()).filter(Boolean))];
+      const credits = [...new Set(group.map((row) => row.credit.trim()).filter(Boolean))];
+      if (notes.length > 1 || credits.length > 1) continue;
+
+      const ranked = [...group].sort((a, b) => {
+        const score = (row: NameRow) => Number(Boolean(row.notes.trim())) + Number(Boolean(row.credit.trim()));
+        return score(b) - score(a) || a.id - b.id;
+      });
+      const keeper = ranked[0];
+      database.prepare("UPDATE names SET notes = ?, credit = ? WHERE id = ?")
+        .run(notes[0] ?? "", credits[0] ?? "", keeper.id);
+
+      for (const duplicate of ranked.slice(1)) {
+        database.prepare("UPDATE suggestions SET linked_name_id = ? WHERE linked_name_id = ?")
+          .run(keeper.id, duplicate.id);
+        removed += database.prepare("DELETE FROM names WHERE id = ?").run(duplicate.id).changes;
+      }
+    }
+    return removed;
+  })();
 }
 
 function likePattern(value: string) {

@@ -1,0 +1,621 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: YAMU 2.0\n"
+"Language: mnw\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "YAMU"
+msgstr "YAMU"
+
+msgid "ယၟု / Mon / Burmese / English"
+msgstr "ယၟု / မန် / ဗၟာ / အင်္ဂလိက်"
+
+msgid "Search"
+msgstr ""
+
+msgid "Naming"
+msgstr ""
+
+msgid "About"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Interface language"
+msgstr ""
+
+msgid "Main navigation"
+msgstr ""
+
+msgid "Public pages"
+msgstr ""
+
+msgid "More options"
+msgstr ""
+
+msgid "Sign in"
+msgstr ""
+
+msgid "Team sign in"
+msgstr ""
+
+msgid "Admin panel"
+msgstr ""
+
+msgid "Admin"
+msgstr "ကောပ်ကာဲ"
+
+msgid "Use light mode"
+msgstr ""
+
+msgid "Use dark mode"
+msgstr ""
+
+msgid "Appearance"
+msgstr ""
+
+msgid "Look up a name"
+msgstr "ဂၠာဲ ယၟု"
+
+msgid "Find a name."
+msgstr ""
+
+msgid "Trilingual name lookup — Mon / Burmese / English"
+msgstr "ဂၠာဲယၟု ဘာသာပိ — မန် / ဗၟာ / အင်္ဂလိက်"
+
+msgid "Find a name across three scripts."
+msgstr "ဂၠာဲ ယၟုမွဲမွဲ နကဵု ပိဘာသာ။"
+
+msgid "Search the catalog, compare every written form, then choose the spelling you want to keep."
+msgstr "ဂၠာဲ နူလိက်ကၞပ်၊ သ္ၚေဝ်ရံၚ် လိက်ပိသာ်တုဲ ရုဲစှ်မလိက် မဒးဂၞပ်စိုတ်ညိ။"
+
+msgid "Aung, အောင်, or အံၚ်"
+msgstr "Aung, အောင်, ဟွံသေၚ်မ္ဂး အံၚ်"
+
+msgid "Look up"
+msgstr "ဂၠာဲ"
+
+msgid "Source"
+msgstr "ဘာသာတမ်"
+
+msgid "Auto"
+msgstr "အလဵုအလဵု"
+
+msgid "Mon"
+msgstr "မန်"
+
+msgid "Burmese"
+msgstr "ဗၟာ"
+
+msgid "English"
+msgstr "အေၚ်္ဂလိက်"
+
+msgid "The catalog is ready. Enter a name to see its three forms."
+msgstr "လိက်ကၞပ် သ္ဇိုၚ်တုဲရ။ စုတ် ယၟုညိ။"
+
+msgid "No catalog row matches that spelling."
+msgstr "ယၟု မကိတ်ညဳ ကုလိက်ဝွံ ဟွံမွဲ။"
+
+msgid "catalog rows"
+msgstr "တၞောဝ်"
+
+msgid "Copy"
+msgstr "စၠောအ်"
+
+msgid "Copied"
+msgstr "စၠောအ်တုဲ"
+
+msgid "Not mapped yet"
+msgstr "ဟွံစၠောံလဝ်ဏီ"
+
+msgid "Note"
+msgstr "စၟတ်သမ္တီ"
+
+msgid "Choose spelling"
+msgstr "ရုဲစှ် မလိက်"
+
+msgid "Export PNG"
+msgstr "ပ္တိတ် PNG"
+
+msgid "Preparing PNG…"
+msgstr "ပလေဝ် PNG…"
+
+msgid "Selected spelling"
+msgstr "မလိက် မရုဲစှ်လဝ်"
+
+msgid "Try a sample name"
+msgstr "စမ် ယၟု"
+
+msgid "Full name composed in order"
+msgstr "ပံၚ်ယၟုမွဲ ကဵုမွဲ ဗွဲလၟေၚ်"
+
+msgid "A word is missing from the index."
+msgstr "မအရေဝ်မွဲ ဟွံမွဲ ပ္ဍဲလိက်ကၞပ်ဏီ။"
+
+msgid "Finished spelling? If this word is really missing, you can send it for review."
+msgstr "ချူမလိက်တုဲရဟာ။ မအရေဝ်ဝွံ ဟွံမွဲဏီမ္ဂး ပလံၚ် သွက်ဂွံစၟဳစၟတ်ဂွံရ။"
+
+msgid "Send the missing spelling to the catalog desk. An admin will verify its Mon, Burmese, and English forms before it becomes searchable."
+msgstr "ပလံၚ်မလိက် မနွံပၟိက်ညိ။ ပကင်ရင် စၟဳစၟတ် မန်၊ ဗၟာ ကဵု အင်္ဂလိက် တုဲ ပံၚ်စုတ်ကဵု ပ္ဍဲလိက်ကၞပ်ရောၚ်။"
+
+msgid "Missing from this full name"
+msgstr "မအရေဝ် မဟွံမွဲ ပ္ဍဲယၟုဝွံ"
+
+msgid "Add this word"
+msgstr "ပံၚ်စုတ် မအရေဝ်ဝွံ"
+
+msgid "Back"
+msgstr "ကလေၚ်"
+
+msgid "Word or name"
+msgstr "မအရေဝ် ဟွံသေၚ် ယၟု"
+
+msgid "Written in"
+msgstr "ဘာသာ မချူလဝ်"
+
+msgid "Helpful context (optional)"
+msgstr "လညာတ် မကဵုအရီုအဗၚ် (ဟွံစုတ်လေဝ်ဂွံ)"
+
+msgid "Pronunciation, alternate spelling, or where you saw it…"
+msgstr "ရမျာၚ်၊ မလိက်…"
+
+msgid "Send for review"
+msgstr "ပလံၚ် သွက်ဂွံစၟဳစၟတ်"
+
+msgid "Sending…"
+msgstr "မပလံၚ်မံၚ်…"
+
+msgid "Received. The catalog desk will review it."
+msgstr "ဒုၚ်တဲတုဲရ။ ပကင်ရင် သ္ဂောံစၟဳစၟတ်။"
+
+msgid "Search is temporarily unavailable."
+msgstr ""
+
+msgid "Search failed."
+msgstr ""
+
+msgid "Indexing…"
+msgstr ""
+
+msgid "Clear search"
+msgstr ""
+
+msgid "Searched “{query}”"
+msgstr ""
+
+msgid "Order preserved"
+msgstr ""
+
+msgid "No match"
+msgstr ""
+
+msgid "Could not load the brand logo."
+msgstr ""
+
+msgid "Canvas is not available."
+msgstr ""
+
+msgid "Not mapped"
+msgstr ""
+
+msgid "Specimen {number}"
+msgstr ""
+
+msgid "Catalog entry"
+msgstr ""
+
+msgid "Contributed by {name}"
+msgstr ""
+
+msgid "Trilingual proof"
+msgstr ""
+
+msgid "Could not render PNG."
+msgstr ""
+
+msgid "Could not export PNG."
+msgstr ""
+
+msgid "Could not copy. Please select and copy the spelling manually."
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Could not send the suggestion."
+msgstr ""
+
+msgid "Contribution ticket"
+msgstr ""
+
+msgid "Word desk"
+msgstr ""
+
+msgid "One spelling is enough. Add the matching forms only if you know them; the catalog desk verifies every entry."
+msgstr ""
+
+msgid "Choose missing word"
+msgstr ""
+
+msgid "Ticket received"
+msgstr ""
+
+msgid "Thank you for helping the catalog grow."
+msgstr ""
+
+msgid "If approved, this entry will show “Contributed by {name}.”"
+msgstr ""
+
+msgid "An admin will verify the three spellings before the entry appears in search."
+msgstr ""
+
+msgid "Add another word"
+msgstr ""
+
+msgid "I know another spelling"
+msgstr ""
+
+msgid "Optional Mon, Burmese, or English forms"
+msgstr ""
+
+msgid "Credit name"
+msgstr ""
+
+msgid "optional"
+msgstr ""
+
+msgid "Name shown after approval"
+msgstr ""
+
+msgid "Public only if the word is approved. No email required."
+msgstr ""
+
+msgid "Helpful note"
+msgstr ""
+
+msgid "Pronunciation, source, or where you saw it"
+msgstr ""
+
+msgid "Review queue · credit after approval"
+msgstr ""
+
+msgid "Send contribution →"
+msgstr ""
+
+msgid "Found while searching:"
+msgstr ""
+
+msgid "Report bug"
+msgstr ""
+
+msgid "Could not send the report."
+msgstr ""
+
+msgid "Issue desk"
+msgstr ""
+
+msgid "Something went wrong?"
+msgstr ""
+
+msgid "Describe what you expected and what happened. The current page is attached automatically."
+msgstr ""
+
+msgid "Close bug report"
+msgstr ""
+
+msgid "Report received"
+msgstr ""
+
+msgid "Thank you. It is now on the admin docket."
+msgstr ""
+
+msgid "Close issue desk"
+msgstr ""
+
+msgid "Short summary"
+msgstr ""
+
+msgid "Example: Search button stops responding"
+msgstr ""
+
+msgid "What happened?"
+msgstr ""
+
+msgid "What did you do, what did you expect, and what happened instead?"
+msgstr ""
+
+msgid "Reporter name"
+msgstr ""
+
+msgid "optional, private"
+msgstr ""
+
+msgid "Helps the admin recognize your report"
+msgstr ""
+
+msgid "Page captured · no screenshot or email"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Send report →"
+msgstr ""
+
+msgid "Name search"
+msgstr ""
+
+msgid "Old Mon naming method / 01"
+msgstr ""
+
+msgid "Traditional name reading"
+msgstr ""
+
+msgid "Read the pattern inside a Mon name."
+msgstr ""
+
+msgid "This tool applies the seven-day character system recorded in the old Mon naming method. Choose the birth day, enter the full Mon name, and see how each component is read."
+msgstr ""
+
+msgid "Birth day"
+msgstr ""
+
+msgid "Choose the day."
+msgstr ""
+
+msgid "Mon name"
+msgstr ""
+
+msgid "Enter the full name."
+msgstr ""
+
+msgid "Starting titles မာံ, နာဲ, မိ are excluded. The same words in the middle or at the end are read as part of the name."
+msgstr ""
+
+msgid "Use the {day} example"
+msgstr ""
+
+msgid "Reading"
+msgstr ""
+
+msgid "Good"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "Bad"
+msgstr ""
+
+msgid "No bad components in this reading."
+msgstr ""
+
+msgid "One bad component is acceptable in this method."
+msgstr ""
+
+msgid "Two or more components have a bad reading."
+msgstr ""
+
+msgid "{count} bad"
+msgstr ""
+
+msgid "Starting title excluded from the reading"
+msgstr ""
+
+msgid "starts with {initial} / day {day}"
+msgstr ""
+
+msgid "Enter a Mon name to see its components. Punctuation and unsupported characters are ignored."
+msgstr ""
+
+msgid "How the result is decided"
+msgstr ""
+
+msgid "The whole pattern matters."
+msgstr ""
+
+msgid "bad component"
+msgstr ""
+
+msgid "bad components"
+msgstr ""
+
+msgid "This is a cultural naming reference, not a scientific prediction or a guarantee about a person's future."
+msgstr ""
+
+msgid "The people"
+msgstr ""
+
+msgid "YAMU / The story behind the index"
+msgstr ""
+
+msgid "Names connect us. People make it possible."
+msgstr ""
+
+msgid "A reference for names across Mon, Burmese, and English — built from a teacher's everyday question, and made better by people who care."
+msgstr ""
+
+msgid "Three scripts, one name"
+msgstr ""
+
+msgid "Mon / Burmese / English"
+msgstr ""
+
+msgid "Keep the roots. Find the spelling."
+msgstr ""
+
+msgid "Tao Mon Lae speaking during a technology presentation"
+msgstr ""
+
+msgid "Teacher · Creator of YAMU"
+msgstr ""
+
+msgid "A note from the maintainer"
+msgstr ""
+
+msgid "It started in a classroom."
+msgstr ""
+
+msgid "I'm Tao Mon Lae [တုမန်လဴ]. I am also known as Min Htet Min Aung. I studied computing and now work as a teacher and in refugee community in humanitarian fields. In schools, I kept seeing junior teachers unsure how to write Mon and Burmese names in English. YAMU - ယၟု began as a way to help. YAMU - ယၟု is inspired by CoonMon Yamu Mon."
+msgstr ""
+
+msgid "Teaching took me away from regular software work in 2018, but my interest in Mon language technology never went away. From Kuala Lumpur, I still explore localization, keyboards, and Mon subtitles — tools that help our language feel at home on modern devices."
+msgstr ""
+
+msgid "The name index sat unfinished until a conversation with Oung Seik brought me back to it. He had been thinking about the same problem. That shared concern became the reason to finish."
+msgstr ""
+
+msgid "A name should keep its roots, wherever it travels."
+msgstr ""
+
+msgid "With thanks"
+msgstr ""
+
+msgid "People behind the names."
+msgstr ""
+
+msgid "Different skills. A shared care for the language."
+msgstr ""
+
+msgid "Contributor"
+msgstr ""
+
+msgid "Their part in YAMU"
+msgstr ""
+
+msgid "Explore his work"
+msgstr ""
+
+msgid "Photo: {source}"
+msgstr ""
+
+msgid "Keep it useful"
+msgstr ""
+
+msgid "One good spelling helps the next person."
+msgstr ""
+
+msgid "Find a name. Suggest a correction. Or help improve the code. This index is still growing."
+msgstr ""
+
+msgid "Search names"
+msgstr ""
+
+msgid "Contribute on GitHub"
+msgstr ""
+
+msgid "Built with care for Mon names."
+msgstr ""
+
+msgid "Team access"
+msgstr ""
+
+msgid "Software engineer · Idea catalyst"
+msgstr ""
+
+msgid "Mon artist · Name contributor"
+msgstr ""
+
+msgid "Oung Seik Nyan introduces himself as a back-end and full-stack developer. He studied mathematics at Mawlamyine University and shares an interest in computer science, systems programming, and Linux."
+msgstr ""
+
+msgid "Our conversation about the same cross-script naming problem gave me the push to return to YAMU and finish what I had started."
+msgstr ""
+
+msgid "AhHtet shares photography and illustration through his public creative profiles. He is the parent of the unique Mi Panyun cartoon character and CoonMon Yamu Mon [ကောန်မန်ယၟုမန်] where he contributes Mon names on Facebook. He is a doctor by training with a Bachelor of Medicine, Bachelor of Surgery (M.B.B.S.) in Medical Science at the University of Medicine, Magway, Myanmar, from 2009 to 2015."
+msgstr ""
+
+msgid "Thank you for contributing names in Mon and English, and for sharing the cultural knowledge behind them."
+msgstr ""
+
+msgid "Naming page navigation"
+msgstr ""
+
+msgid "About page navigation"
+msgstr ""
+
+msgid "{name} — public profile portrait"
+msgstr ""
+
+msgid "{name} portrait source: {source}"
+msgstr ""
+
+msgid "Profile / GitHub"
+msgstr ""
+
+msgid "Education / LinkedIn"
+msgstr ""
+
+msgid "SUN"
+msgstr ""
+
+msgid "MON"
+msgstr ""
+
+msgid "TUE"
+msgstr ""
+
+msgid "WED"
+msgstr ""
+
+msgid "THU"
+msgstr ""
+
+msgid "FRI"
+msgstr ""
+
+msgid "SAT"
+msgstr ""
+
+msgid "Sunday"
+msgstr ""
+
+msgid "Monday"
+msgstr ""
+
+msgid "Tuesday"
+msgstr ""
+
+msgid "Wednesday"
+msgstr ""
+
+msgid "Thursday"
+msgstr ""
+
+msgid "Friday"
+msgstr ""
+
+msgid "Saturday"
+msgstr ""
+
+msgid "King"
+msgstr ""
+
+msgid "Wealth"
+msgstr ""
+
+msgid "Glory"
+msgstr ""
+
+msgid "Poverty"
+msgstr ""
+
+msgid "Loss"
+msgstr ""
+
+msgid "Animal"
+msgstr ""
+
+msgid "good"
+msgstr ""
+
+msgid "normal"
+msgstr ""
+
+msgid "bad"
+msgstr ""
+
+msgid "Bug"
+msgstr ""
+

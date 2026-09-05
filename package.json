@@ -4,11 +4,15 @@
   "license": "MIT",
   "private": true,
   "scripts": {
+    "predev": "npm run i18n:compile",
     "dev": "next dev --turbopack --port 3002",
+    "prebuild": "npm run i18n:compile",
     "build": "next build",
     "start": "next start --port 3002",
     "lint": "eslint",
-    "import:myanmar-names": "node scripts/import-myanmar-names.mjs"
+    "import:myanmar-names": "node scripts/import-myanmar-names.mjs",
+    "i18n:compile": "node scripts/compile-locales.mjs",
+    "i18n:sync": "node scripts/compile-locales.mjs --sync"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
