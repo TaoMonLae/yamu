@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Search, X, ArrowRight } from "lucide-react";
+import { NameSearchHeader } from "@/components/NameSearchHeader";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SpecimenRow } from "@/components/SpecimenRow";
 import { SuggestionCard } from "@/components/SuggestionCard";
@@ -128,118 +130,46 @@ export function Converter() {
 
   return (
     <div className="min-h-screen">
-      <SiteHeader lang={lang} onLang={changeLang} />
+      <div className="hidden md:block"><SiteHeader lang={lang} onLang={changeLang} /></div>
+      <NameSearchHeader lang={lang} onLang={changeLang} />
 
-      <main className="index-shell pb-20 pt-10 md:pt-14">
-        <section aria-labelledby="lookup-heading">
-          <p lang={uiLang} className={`flex items-center gap-3 text-ash ${usesMyanmarScript ? "font-script text-[12px]" : "micro-label"}`}>
-            <span className="h-px w-12 bg-ink" aria-hidden="true" />
-            {copy.kicker}
-          </p>
-
-          <div className="mt-8 grid gap-8 border-b border-pewter pb-10 md:grid-cols-[minmax(0,1.5fr)_minmax(260px,.6fr)] md:items-end">
-            <h1
-              id="lookup-heading"
-              lang={uiLang}
-              className={`text-balance font-semibold text-ink ${
-                usesMyanmarScript
-                  ? "font-script-display max-w-[18ch] text-[clamp(40px,5.4vw,70px)]"
-                  : "max-w-[15ch] text-[clamp(46px,7.2vw,92px)] leading-[0.96] tracking-[-0.055em]"
-              }`}
-            >
-              {copy.headline}
-            </h1>
-            <p lang={uiLang} className={`max-w-[38ch] text-pretty text-[15px] text-ash md:justify-self-end md:pb-2 ${usesMyanmarScript ? "font-script leading-[1.8]" : "leading-7"}`}>
-              {copy.hint}
-            </p>
+      <main className="index-shell name-index">
+        <section aria-labelledby="lookup-heading" className="name-search-area">
+          <div className="name-search-title">
+            <h1 id="lookup-heading" lang={uiLang} className={usesMyanmarScript ? "font-script" : ""}>{lang === "english" ? "Find a name." : copy.lookup}</h1>
+            <p lang={uiLang}>{copy.tagline}</p>
           </div>
-
-          <form onSubmit={onSubmit} className="mt-8" role="search">
-            <label htmlFor="name-query" lang={uiLang} className={`text-ink ${usesMyanmarScript ? "font-script text-[13px] font-bold" : "micro-label"}`}>
-              {copy.lookup}
-            </label>
-            <div className="mt-3 flex min-h-[76px] border border-ink bg-paper focus-within:border-accent focus-within:ring-1 focus-within:ring-accent">
-              <input
-                id="name-query"
-                name="name"
-                lang={usesMyanmarScript ? uiLang : queryUsesMyanmarScript ? "my" : "en"}
-                value={query}
-                maxLength={200}
-                onChange={(event) => {
-                  setSuggesting(false);
-                  setQuery(event.target.value);
-                }}
-                placeholder={copy.placeholder}
-                autoFocus
-                autoComplete="off"
-                spellCheck={false}
-                className={`min-w-0 flex-1 bg-transparent px-5 text-[clamp(25px,3vw,42px)] font-medium text-ink outline-none placeholder:text-stone md:px-7 ${
-                  usesMyanmarScript || queryUsesMyanmarScript
-                    ? "font-script leading-[1.55] tracking-normal"
-                    : "tracking-[-0.025em]"
-                }`}
-              />
-              <button
-                type="submit"
-                disabled={pending}
-                className="group min-w-[88px] border-l border-ink bg-accent px-5 font-display text-[15px] font-semibold uppercase tracking-[0.05em] text-on-accent transition-colors duration-150 hover:bg-[var(--index-accent-dark)] disabled:opacity-60 sm:min-w-[160px]"
-              >
-                <span lang={uiLang} className={`hidden sm:inline ${usesMyanmarScript ? "font-script text-[15px] normal-case tracking-normal" : ""}`}>{pending ? "…" : copy.search}</span>
-                <span className="text-[26px] transition-transform duration-150 group-hover:translate-x-1 sm:hidden" aria-hidden="true">→</span>
+          <form onSubmit={onSubmit} role="search">
+            <label htmlFor="name-query" className="sr-only">{copy.lookup}</label>
+            <div className="name-search-input">
+              <Search size={20} aria-hidden />
+              <input id="name-query" name="name" type="search" enterKeyHint="search"
+                value={query} maxLength={200} autoComplete="off" spellCheck={false}
+                onChange={(event) => { setSuggesting(false); setQuery(event.target.value); }}
+                placeholder={copy.placeholder} className={queryUsesMyanmarScript ? "font-script" : ""} />
+              {query ? <button type="button" className="name-clear" aria-label="Clear search"
+                onClick={() => { setQuery(""); setSuggesting(false); document.getElementById("name-query")?.focus(); }}><X size={18} /></button> : null}
+              <button type="submit" disabled={pending} className="name-submit" aria-label={copy.search}>
+                <span>{pending ? "…" : copy.search}</span><ArrowRight size={22} aria-hidden />
               </button>
             </div>
-
-            <div className="mt-4 flex flex-col justify-between gap-4 border-b border-pewter pb-6 sm:flex-row sm:items-end">
-              <fieldset>
-                <legend lang={uiLang} className={`text-ash ${usesMyanmarScript ? "font-script text-[12px] font-bold" : "micro-label"}`}>{copy.source}</legend>
-                <div className="mt-2 flex flex-wrap border border-pewter bg-paper">
-                  {SOURCES.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => {
-                        setSuggesting(false);
-                        setSource(item);
-                      }}
-                      aria-pressed={source === item}
-                      className={`min-h-10 border-r border-pewter px-4 text-[12px] last:border-r-0 ${
-                        source === item ? "bg-ink text-canvas" : "bg-paper text-ink hover:bg-mist"
-                      } ${usesMyanmarScript || item === "mon" || item === "burmese" ? "font-script" : "font-display font-semibold uppercase tracking-[0.04em]"}`}
-                    >
-                      {item === "auto"
-                        ? copy.auto
-                        : item === "mon"
-                          ? copy.mon
-                          : item === "burmese"
-                            ? copy.burmese
-                            : copy.english}
-                    </button>
-                  ))}
-                </div>
+            <div className="name-search-options">
+              <fieldset className="name-source"><legend className="sr-only">{copy.source}</legend>
+                {SOURCES.map((item) => <button key={item} type="button" aria-pressed={source === item}
+                  onClick={() => { setSource(item); setSuggesting(false); }}
+                  className={usesMyanmarScript ? "font-script" : ""}>
+                  {item === "auto" ? copy.auto : copy[item]}
+                </button>)}
               </fieldset>
-
-              <div>
-                <p lang={uiLang} className={`text-ash ${usesMyanmarScript ? "font-script text-[12px] font-bold" : "micro-label"}`}>{copy.tryName}</p>
-                <div className="mt-2 flex gap-1">
-                  {SAMPLES.map((sample) => (
-                    <button
-                      key={sample}
-                      type="button"
-                      onClick={() => trySample(sample)}
-                      className={`min-h-9 border-b border-ink px-2 text-[13px] hover:border-accent hover:text-accent ${sample === "Aung" ? "" : "font-script"}`}
-                    >
-                      {sample}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <div className="name-samples"><span>{copy.tryName}</span>{SAMPLES.map((sample) =>
+                <button type="button" key={sample} onClick={() => trySample(sample)} className={sample === "Aung" ? "" : "font-script"}>{sample}</button>)}</div>
             </div>
           </form>
         </section>
 
-        <section className="mt-8" aria-live="polite" aria-busy={pending}>
+        <section className="name-results" aria-busy={pending}>
           <div className="mb-4 flex items-center justify-between gap-4">
-            <p lang={uiLang} className={`text-ash ${usesMyanmarScript ? "font-script text-[12px]" : "micro-label"}`}>{status}</p>
+            <p role="status" lang={uiLang} className={`text-ash ${usesMyanmarScript ? "font-script text-[12px]" : "micro-label"}`}>{status}</p>
             {results?.length ? (
               <p className="hidden text-[11px] uppercase tracking-[0.08em] text-stone sm:block">
                 Searched “{query.trim()}”
@@ -253,7 +183,8 @@ export function Converter() {
             </p>
           ) : null}
 
-          <div className="flex flex-col gap-6">
+          <div className="name-results-list">
+            {results?.length ? <div className="name-column-head" aria-hidden><span>#</span><span>{copy.mon}</span><span>{copy.burmese}</span><span>{copy.english}</span><span>{copy.choose}</span></div> : null}
             {searchMeta.mode === "composed" && results?.length ? (
               <div className="grid border border-ink bg-ink text-canvas sm:grid-cols-[110px_1fr_auto] sm:items-center">
                 <p className="border-b border-canvas/20 px-4 py-4 font-display text-[28px] font-semibold sm:border-b-0 sm:border-r">

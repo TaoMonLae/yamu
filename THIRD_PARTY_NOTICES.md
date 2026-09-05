@@ -47,8 +47,14 @@ are not covered by the MIT License. This includes:
 - `public/icons/icon-512.png`
 - `public/icons/icon-maskable-512.png`
 - `public/IMG_3292.jpg`
+- `public/people/oung-seik.jpg`
+- `public/people/ahhtet-coonmon.jpg`
 
 Their presence in the repository does not grant trademark or reuse rights.
+The contributor portraits are copied from public profile images for the Yamu
+About page. Their sources and research notes are recorded in
+[`docs/about-page-sources.md`](docs/about-page-sources.md). Confirm permission
+with the people shown before public publication or redistribution.
 
 ## Package dependencies
 

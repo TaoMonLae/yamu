@@ -3,218 +3,94 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { DepthCard } from "@/components/reactbits/DepthCard";
+import { NameSearchHeader } from "@/components/NameSearchHeader";
 import type { UiLanguage } from "@/lib/types";
 
-const CREDITS = [
+const PEOPLE = [
   {
-    number: "01",
-    name: "Oung Seik",
-    role: "Idea catalyst / fellow builder",
-    note: "For believing, as I do, that Mon and Burmese names need a reliable cross-script reference, and for helping me return to an idea I had set aside.",
-    href: "https://github.com/Oungseik",
-    linkLabel: "GitHub profile",
+    id: "oung-seik", number: "01", name: "Oung Seik", role: "Software engineer · Idea catalyst",
+    image: "/people/oung-seik.jpg", imageSource: "https://github.com/Oungseik", imageLabel: "GitHub",
+    bio: "Oung Seik Nyan introduces himself as a back-end and full-stack developer. He studied mathematics at Mawlamyine University and shares an interest in computer science, systems programming, and Linux.",
+    contribution: "Our conversation about the same cross-script naming problem gave me the push to return to YAMU and finish what I had started.",
+    href: "https://github.com/Oungseik", linkLabel: "Explore his work",
+    bioSource: "https://github.com/Oungseik", bioSourceLabel: "Profile / GitHub",
   },
   {
-    number: "02",
-    name: "AhHtet Coon Mon",
-    role: "Doctor / Mon artist / contributor",
-    note: "For contributing names in Mon and English, and for sharing the cultural knowledge behind them.",
-    href: "https://www.facebook.com/ahhtet93",
-    linkLabel: "Facebook profile",
+    id: "ahhtet-coonmon", number: "02", name: "AhHtet CoonMon", role: "Mon artist · Name contributor",
+    image: "/people/ahhtet-coonmon.jpg", imageSource: "https://www.pinterest.com/ahhtet/", imageLabel: "Pinterest",
+    bio: "AhHtet shares photography and illustration through his public creative profiles. He is the parent of Mi Panyun cartoon. He is a doctor by training with a Bachelor of Medicine, Bachelor of Surgery (M.B.B.S.) in Medical Science at the University of Medicine, Magway, Myanmar, from 2009 to 2015.",
+    contribution: "Thank you for contributing names in Mon and English, and for sharing the cultural knowledge behind them.",
+    href: "https://www.instagram.com/ahhtet93/", linkLabel: "Explore his work",
+    bioSource: "https://www.linkedin.com/in/ahhtet-coonmon-35468a127/", bioSourceLabel: "Education / LinkedIn",
   },
 ] as const;
 
 export function AboutApp() {
   const [lang, setLang] = useState<UiLanguage>("english");
-
   useEffect(() => {
     const stored = window.localStorage.getItem("ui-lang");
-    if (stored === "mon" || stored === "burmese" || stored === "english") {
-      setLang(stored);
-    }
+    if (stored === "mon" || stored === "burmese" || stored === "english") setLang(stored);
   }, []);
-
   function changeLang(next: UiLanguage) {
     setLang(next);
     window.localStorage.setItem("ui-lang", next);
   }
 
-  return (
-    <div className="min-h-screen">
-      <SiteHeader lang={lang} onLang={changeLang} about />
-
-      <main className="index-shell pb-20 pt-10 md:pt-14">
-        <section aria-labelledby="about-heading">
-          <p className="micro-label flex items-center gap-3 text-ash">
-            <span className="h-px w-12 bg-ink" aria-hidden="true" />
-            About / Maintainer&apos;s note
-          </p>
-
-          <div className="mt-8 grid gap-10 border-b border-ink pb-10 lg:grid-cols-[minmax(0,1.18fr)_minmax(360px,.72fr)] lg:items-end lg:gap-12">
-            <div className="lg:self-center lg:pb-1">
-              <p lang="mnw" className="font-script-display text-[clamp(42px,6vw,76px)] font-bold text-accent">
-                ယၟု
-              </p>
-              <h1
-                id="about-heading"
-                className="mt-3 max-w-[12ch] text-balance text-[clamp(48px,6.2vw,88px)] font-semibold leading-[0.9] tracking-[-0.055em] text-ink"
-              >
-                A name should keep its roots, wherever it travels.
-              </h1>
+  return <div className="min-h-screen">
+    <div className="hidden md:block"><SiteHeader lang={lang} onLang={changeLang} about /></div>
+    <NameSearchHeader lang={lang} onLang={changeLang} />
+    <main className="index-shell about-index">
+      <nav className="about-path" aria-label="About page navigation">
+        <Link href="/"><ArrowLeft size={16} aria-hidden />Name search</Link>
+        <a href="#people">The people<ArrowRight size={16} aria-hidden /></a>
+      </nav>
+      <section className="about-intro" aria-labelledby="about-heading">
+        <div>
+          <p className="micro-label text-ash">YAMU / The story behind the index</p>
+          <h1 id="about-heading">Names connect us.<br />People make it possible.</h1>
+          <p className="about-lead">A reference for names across Mon, Burmese, and English — built from a teacher&apos;s everyday question, and made better by people who care.</p>
+        </div>
+        <div className="about-language-note" aria-label="Three scripts, one name">
+          <span lang="mnw" className="font-script">ယၟု</span>
+          <div><p>Mon / Burmese / English</p><p>Keep the roots. Find the spelling.</p></div>
+        </div>
+      </section>
+      <section className="about-story" aria-labelledby="story-heading">
+        <figure className="about-maintainer">
+          <div className="about-maintainer-photo"><Image src="/IMG_3292.jpg" alt="Tao Mon Lae speaking during a technology presentation" fill priority sizes="(max-width: 767px) calc(100vw - 24px), 340px" className="object-cover object-[62%_center]" /></div>
+          <figcaption><strong>Tao Mon Lae</strong><span>Teacher · Creator of YAMU</span></figcaption>
+        </figure>
+        <div className="about-story-copy">
+          <p className="micro-label text-ash">01 / A note from the maintainer</p>
+          <h2 id="story-heading">It started in a classroom.</h2>
+          <p>I&apos;m Tao Mon Lae [တုမန်လဴ]. I am also known as Min Htet Min Aung. I studied computing and now work as a teacher and in refugee community in humanitarian fields. In schools, I kept seeing junior teachers unsure how to write Mon and Burmese names in English. YAMU - ယၟု began as a way to help.</p>
+          <p>Teaching took me away from regular software work in 2018, but my interest in Mon language technology never went away. From Kuala Lumpur, I still explore localization, keyboards, and Mon subtitles — tools that help our language feel at home on modern devices.</p>
+          <p>The name index sat unfinished until a conversation with Oung Seik brought me back to it. He had been thinking about the same problem. That shared concern became the reason to finish.</p>
+          <p className="about-signature">A name should keep its roots, wherever it travels.</p>
+        </div>
+      </section>
+      <section id="people" className="about-people" aria-labelledby="people-heading">
+        <div className="about-section-heading"><div><p className="micro-label text-ash">02 / With thanks</p><h2 id="people-heading">People behind the names.</h2></div><p>Different skills. A shared care for the language.</p></div>
+        <div className="about-people-grid">
+          {PEOPLE.map(person => <article className="about-person" key={person.id} aria-labelledby={person.id + "-heading"}>
+            <div className="about-person-identity">
+              <div className="about-person-photo"><Image src={person.image} alt={person.name + " — public profile portrait"} width={160} height={160} sizes="(max-width: 767px) 88px, 160px" /></div>
+              <div className="min-w-0"><span className="micro-label text-ash">Contributor / {person.number}</span><h3 id={person.id + "-heading"}>{person.name}</h3><p>{person.role}</p></div>
             </div>
-
-            <aside aria-label="Developer profile" className="self-end">
-              <DepthCard className="group mx-auto w-full max-w-[520px] lg:max-w-none">
-                <figure className="border border-ink bg-ink">
-                  <div className="relative aspect-[4/3] overflow-hidden lg:aspect-[5/6]">
-                    <Image
-                      src="/IMG_3292.jpg"
-                      alt="Tao Mon Lae speaking during a technology presentation"
-                      fill
-                      priority
-                      sizes="(max-width: 1023px) calc(100vw - 24px), 430px"
-                      className="object-cover object-[62%_center] transition-[filter] duration-300 group-hover:brightness-90"
-                    />
-                    <span className="absolute left-0 top-0 bg-accent px-3 py-2 font-display text-[10px] font-semibold uppercase tracking-[0.1em] text-on-accent">
-                      Portrait / 001
-                    </span>
-                  </div>
-                  <figcaption className="grid grid-cols-[1fr_auto] items-center gap-4 border-t border-ink bg-canvas px-4 py-3 text-ink">
-                    <span className="font-display text-[16px] font-semibold uppercase tracking-[-0.01em]">Tao Mon Lae</span>
-                    <span className="micro-label text-ash">Speaking / Technology</span>
-                  </figcaption>
-                </figure>
-              </DepthCard>
-
-              <dl className="border-x border-b border-pewter bg-paper text-[13px]">
-                <div className="grid grid-cols-[92px_1fr] border-b border-pewter py-3">
-                  <dt className="micro-label pl-4 text-ash">Practice</dt>
-                  <dd className="pr-4 text-ink">Teacher / computer graduate</dd>
-                </div>
-                <div className="grid grid-cols-[92px_1fr] border-b border-pewter py-3">
-                  <dt className="micro-label pl-4 text-ash">Based</dt>
-                  <dd className="pr-4 text-ink">Kuala Lumpur, Malaysia</dd>
-                </div>
-                <div className="grid grid-cols-[92px_1fr] py-3">
-                  <dt className="micro-label pl-4 text-ash">Focus</dt>
-                  <dd className="pr-4 text-ink">Mon language technology</dd>
-                </div>
-              </dl>
-            </aside>
-          </div>
-        </section>
-
-        <section className="grid border-b border-pewter lg:grid-cols-[220px_minmax(0,1fr)]" aria-labelledby="story-heading">
-          <div className="border-b border-pewter py-8 lg:border-b-0 lg:border-r lg:py-12">
-            <p className="font-display text-[42px] font-semibold leading-none tracking-[-0.04em]">01</p>
-            <p className="micro-label mt-3 text-ash">Origin / The person behind Yamu</p>
-          </div>
-          <div className="py-8 lg:px-14 lg:py-12">
-            <h2 id="story-heading" className="max-w-[17ch] text-balance text-[clamp(36px,5vw,64px)] font-semibold leading-[0.96] tracking-[-0.045em]">
-              I teach for a living. I still build things.
-            </h2>
-            <div className="mt-10 grid gap-8 text-pretty text-[16px] leading-8 text-ash md:grid-cols-2 md:gap-x-12">
-              <div className="space-y-7">
-                <p>
-                  Hi, I&apos;m Tao Mon Lae. I studied computing, but I work as a teacher. I still code for fun, though I no longer call myself a programmer or developer. Software used to be my main passion. In 2018, teaching pulled me away from building it regularly.
-                </p>
-                <p>
-                  My interest in Mon language technology never went away. I care about localization, keyboards, and tools that make it easier to use Mon on modern devices. I now live in Kuala Lumpur, where I&apos;m also exploring Mon subtitles for films.
-                </p>
-              </div>
-              <div className="space-y-7 md:border-l md:border-pewter md:pl-12">
-                <p>
-                  Yamu began with something I kept seeing in schools: many junior teachers were unsure how to write Mon and Burmese names in English. I wanted to help, but the project sat unfinished while I worked on other private projects.
-                </p>
-                <p>
-                  Years later, I met Oung Seik and learned that he had been thinking about the same problem. Our conversation gave me the push I needed to pick up Yamu again and finish what I had started.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-12" aria-labelledby="credits-heading">
-          <div className="grid gap-8 border-b border-ink pb-8 md:grid-cols-[1fr_1fr] md:items-end">
-            <div>
-              <p className="micro-label text-ash">02 / Honorable mentions</p>
-              <h2 id="credits-heading" className="mt-5 text-[clamp(44px,6vw,78px)] font-semibold leading-[0.92] tracking-[-0.05em]">
-                Thanks to the people who helped.
-              </h2>
-            </div>
-            <p className="max-w-[50ch] text-pretty text-[15px] leading-7 text-ash md:justify-self-end">
-              Yamu would not be here without people who understood why it mattered and were willing to help.
-            </p>
-          </div>
-
-          <div>
-            {CREDITS.map((credit) => (
-              <article key={credit.number} className="group grid border-b border-pewter py-7 md:grid-cols-[72px_1fr_1.4fr_auto] md:items-start md:gap-8">
-                <p className="font-display text-[30px] font-semibold leading-none text-ash">{credit.number}</p>
-                <div className="mt-4 md:mt-0">
-                  <h3 className="text-[24px] font-semibold leading-tight tracking-[-0.025em]">{credit.name}</h3>
-                  <p className="micro-label mt-2 text-ash">{credit.role}</p>
-                </div>
-                <p className="mt-4 max-w-[54ch] text-pretty text-[14px] leading-7 text-ash md:mt-0">{credit.note}</p>
-                <a
-                  href={credit.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-5 inline-flex items-center gap-3 border-b border-ink pb-1 font-display text-[12px] font-semibold uppercase tracking-[0.06em] text-ink no-underline transition-colors hover:border-accent hover:text-accent md:mt-0"
-                >
-                  {credit.linkLabel}
-                  <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">↗</span>
-                </a>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="grid border border-ink bg-paper md:grid-cols-[220px_1fr_minmax(220px,260px)]" aria-labelledby="invitation-heading">
-          <div className="flex min-h-36 items-center border-b border-ink bg-ink px-6 text-canvas md:border-b-0 md:border-r">
-            <p className="font-display text-[48px] font-semibold leading-none">03</p>
-          </div>
-          <div className="px-6 py-8 md:px-10">
-            <p className="micro-label text-ash">An open invitation</p>
-            <h2 id="invitation-heading" className="mt-4 max-w-[22ch] text-balance text-[30px] font-semibold leading-tight tracking-[-0.035em]">
-              Fork the code. Correct a spelling. Add a name. Keep the index useful.
-            </h2>
-            <p className="mt-4 max-w-[66ch] text-[14px] leading-7 text-ash">
-              Yamu is still growing. If it helps even one teacher, student, or family feel more confident about a name&apos;s spelling, the work is worthwhile.
-            </p>
-          </div>
-          <div className="grid border-t border-ink md:min-h-full md:grid-rows-2 md:border-l md:border-t-0">
-            <a
-              href="https://github.com/TaoMonLae/yamu"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="View the Yamu repository on GitHub (opens in a new tab)"
-              className="group flex min-h-24 items-center justify-between gap-6 bg-ink px-6 font-display text-canvas no-underline transition-colors hover:bg-accent hover:text-on-accent md:min-h-0"
-            >
-              <span className="flex flex-col gap-2">
-                <span className="text-[10px] font-normal uppercase tracking-[0.1em] opacity-60">Source / GitHub</span>
-                <span className="text-[13px] font-semibold uppercase tracking-[0.06em]">Yamu repository</span>
-              </span>
-              <span aria-hidden="true" className="text-lg transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5">↗</span>
-            </a>
-            <Link href="/" className="group flex min-h-20 items-center justify-between gap-8 border-t border-ink bg-accent px-6 font-display text-[13px] font-semibold uppercase tracking-[0.06em] text-on-accent no-underline transition-colors hover:bg-[var(--index-accent-dark)] md:min-h-0">
-              Search Yamu
-              <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
-            </Link>
-          </div>
-        </section>
-
-        <footer className="mt-5 flex justify-end" aria-label="Administrative access">
-          <Link
-            href="/admin"
-            className="font-display text-[10px] font-medium uppercase tracking-[0.1em] text-stone no-underline opacity-70 transition-[color,opacity] hover:text-ink hover:opacity-100"
-          >
-            Admin access
-          </Link>
-        </footer>
-      </main>
-    </div>
-  );
+            <p className="about-person-bio">{person.bio}</p>
+            <a className="about-bio-source" href={person.bioSource} target="_blank" rel="noreferrer">{person.bioSourceLabel}<ArrowUpRight size={14} aria-hidden /></a>
+            <div className="about-contribution"><p className="micro-label text-ash">Their part in YAMU</p><p>{person.contribution}</p></div>
+            <div className="about-person-links"><a href={person.href} target="_blank" rel="noreferrer">{person.linkLabel}<ArrowUpRight size={17} aria-hidden /></a><a href={person.imageSource} target="_blank" rel="noreferrer" aria-label={person.name + " portrait source: " + person.imageLabel}>Photo: {person.imageLabel}</a></div>
+          </article>)}
+        </div>
+      </section>
+      <section className="about-invitation" aria-labelledby="invitation-heading">
+        <div><p className="micro-label text-ash">03 / Keep it useful</p><h2 id="invitation-heading">One good spelling helps<br />the next person.</h2><p>Find a name. Suggest a correction. Or help improve the code.<br className="hidden md:block" /> This index is still growing.</p></div>
+        <div className="about-actions"><Link href="/" className="about-search-link">Search names<ArrowRight size={20} aria-hidden /></Link><a href="https://github.com/TaoMonLae/yamu" target="_blank" rel="noreferrer">Contribute on GitHub<ArrowUpRight size={18} aria-hidden /></a></div>
+      </section>
+      <footer className="about-footer"><span>Built with care for Mon names.</span><Link href="/admin">Team access<ArrowUpRight size={14} aria-hidden /></Link></footer>
+    </main>
+  </div>;
 }

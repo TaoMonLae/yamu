@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { Check, ChevronRight, Copy, Download, X } from "lucide-react";
 import { useBranding } from "@/components/BrandingProvider";
-import { FitText } from "@/components/FitText";
-import { SpotlightCard } from "@/components/reactbits/SpotlightCard";
-import { ShinyText } from "@/components/reactbits/ShinyText";
 import { t } from "@/lib/i18n";
 import type { BrandSettings, Language, NameRecord, UiLanguage } from "@/lib/types";
 
@@ -163,8 +161,6 @@ async function renderPng(
 export function SpecimenRow({ row, lang, index }: Props) {
   const { branding } = useBranding();
   const copy = t(lang);
-  const usesMyanmarScript = lang !== "english";
-  const uiLang = lang === "mon" ? "mnw" : lang === "burmese" ? "my" : "en";
   const [selected, setSelected] = useState<SelectedSpellings>({
     mon: row.monVariants[0] ?? row.mon,
     burmese: row.burmeseVariants[0] ?? row.burmese,
@@ -173,6 +169,25 @@ export function SpecimenRow({ row, lang, index }: Props) {
   const [copied, setCopied] = useState<Language | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const sheet = useRef<HTMLDialogElement>(null);
+  const detailId = useId();
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const dialog = sheet.current;
+    dialog?.showModal();
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = previous;
+    };
+  }, [sheetOpen]);
+  function openDetails() {
+    if (window.matchMedia("(max-width: 767px)").matches) setSheetOpen(true);
+    else setExpanded((value) => !value);
+  }
 
   const cells: Array<{
     key: Language;
@@ -186,7 +201,8 @@ export function SpecimenRow({ row, lang, index }: Props) {
   ];
 
   async function copyValue(key: Language) {
-    await navigator.clipboard.writeText(selected[key]);
+    try { await navigator.clipboard.writeText(selected[key]); }
+    catch { setExportError("Could not copy. Please select and copy the spelling manually."); return; }
     setCopied(key);
     window.setTimeout(() => setCopied(null), 1200);
   }
@@ -203,111 +219,67 @@ export function SpecimenRow({ row, lang, index }: Props) {
     }
   }
 
-  return (
-    <SpotlightCard className="result-enter border border-ink bg-paper" spotlightColor="color-mix(in srgb, var(--index-accent) 9%, transparent)">
-      <div className="flex items-center justify-between border-b border-pewter px-4 py-3 sm:px-5">
-        <p className="micro-label text-ash">
-          Specimen {String(index).padStart(2, "0")}
-        </p>
-        <p lang={uiLang} className={`text-[11px] text-stone ${usesMyanmarScript ? "font-script" : "uppercase tracking-[0.08em]"}`}>{copy.selected}</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3">
-        {cells.map((cell, cellIndex) => (
-          <section
-            key={cell.key}
-            lang={cell.key === "mon" ? "mnw" : cell.key === "burmese" ? "my" : "en"}
-            aria-labelledby={`${row.id}-${cell.key}-label`}
-            className={`relative min-w-0 px-5 py-6 md:min-h-[360px] md:px-7 md:py-7 ${
-              cellIndex > 0 ? "border-t border-pewter md:border-l md:border-t-0" : ""
-            }`}
-          >
-            <div className="flex items-center justify-between gap-4">
-              <p
-                id={`${row.id}-${cell.key}-label`}
-                className={`text-ash ${usesMyanmarScript || cell.script ? "font-script text-[12px] normal-case tracking-normal" : "micro-label"}`}
-              >
-                0{cellIndex + 1} / {cell.label}
-              </p>
-              {selected[cell.key] ? (
-                <button
-                  type="button"
-                  onClick={() => void copyValue(cell.key)}
-                  lang={uiLang}
-                  className={`min-h-9 border-b border-ink px-1 text-ink transition-colors hover:border-accent hover:text-accent ${usesMyanmarScript ? "font-script text-[12px]" : "micro-label"}`}
-                >
-                  {copied === cell.key ? <ShinyText>{copy.copied}</ShinyText> : copy.copy}
-                </button>
-              ) : (
-                <span lang={uiLang} className={`text-stone ${usesMyanmarScript ? "font-script text-[11px]" : "micro-label"}`}>
-                  {copy.notMapped}
-                </span>
-              )}
+  // Adapted from licensed React Bits Pro list-7 and data-table-4:
+  // aligned column grids, disclosure controls, and contextual row details.
+  const details = (
+    <div className="name-details">
+      <div className="name-variants">
+        {cells.map((cell) => (
+          <fieldset key={cell.key}>
+            <legend className={cell.script ? "font-script" : ""}>{cell.label} · {copy.choose}</legend>
+            <div className="name-choices">
+              {cell.variants.map((variant) => (
+                <button key={variant} type="button" aria-pressed={selected[cell.key] === variant}
+                  onClick={() => setSelected((current) => ({ ...current, [cell.key]: variant }))}
+                  lang={cell.key === "mon" ? "mnw" : cell.key === "burmese" ? "my" : "en"}
+                  className={cell.script ? "font-script" : ""}>{variant}</button>
+              ))}
+              {!cell.variants.length ? <span>{copy.notMapped}</span> : null}
             </div>
-
-            <FitText
-              value={selected[cell.key] || "—"}
-              containerClassName="mt-7 flex min-h-[118px] items-center"
-              className={`font-bold text-ink ${
-                cell.script
-                  ? "font-script-display text-[clamp(46px,5.4vw,74px)]"
-                  : "text-[clamp(48px,6vw,82px)] leading-[1.08] tracking-[-0.04em]"
-              }`}
-            />
-
-            {cell.variants.length > 1 ? (
-              <fieldset className="mt-8">
-                <legend lang={uiLang} className={`text-stone ${usesMyanmarScript ? "font-script text-[12px]" : "micro-label"}`}>{copy.choose}</legend>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {cell.variants.map((variant) => (
-                    <button
-                      key={variant}
-                      type="button"
-                      aria-pressed={selected[cell.key] === variant}
-                      onClick={() => setSelected((current) => ({ ...current, [cell.key]: variant }))}
-                      lang={cell.key === "mon" ? "mnw" : cell.key === "burmese" ? "my" : "en"}
-                      className={`min-h-10 border px-3 text-[14px] transition-colors ${cell.script ? "font-script" : ""} ${
-                        selected[cell.key] === variant
-                          ? "border-accent bg-accent text-on-accent"
-                          : "border-pewter bg-paper text-ink hover:border-ink"
-                      }`}
-                    >
-                      {variant}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-            ) : selected[cell.key] ? (
-              <div className="mt-10 flex items-center gap-3 text-[11px] uppercase tracking-[0.08em] text-stone">
-                <span className="h-1 w-8 bg-accent" aria-hidden="true" />
-                One catalog spelling
-              </div>
-            ) : (
-              <div lang={uiLang} className={`mt-10 flex items-center gap-3 text-stone ${usesMyanmarScript ? "font-script text-[11px]" : "micro-label"}`}>
-                <span className="h-1 w-8 bg-pewter" aria-hidden="true" />
-                {copy.notMapped}
-              </div>
-            )}
-          </section>
+          </fieldset>
         ))}
       </div>
-
-      <div className="flex flex-col gap-4 border-t border-pewter px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-[12px] text-ash"><span lang={uiLang} className={`mr-3 text-ink ${usesMyanmarScript ? "font-script font-bold" : "micro-label"}`}>{copy.notes}</span>{row.notes || "—"}</p>
-          {row.credit ? <p className="mt-2 font-display text-[10px] font-semibold uppercase tracking-[0.08em] text-accent">Contributed by {row.credit}</p> : null}
-        </div>
-        <button
-          type="button"
-          onClick={() => void exportName()}
-          disabled={exporting}
-          lang={uiLang}
-          className={`min-h-11 shrink-0 border border-ink bg-ink px-5 text-[12px] font-semibold text-canvas transition-colors hover:border-accent hover:bg-accent hover:text-on-accent disabled:opacity-50 ${usesMyanmarScript ? "font-script" : "font-display uppercase tracking-[0.06em]"}`}
-        >
-          {exporting ? copy.exporting : `${copy.export} ↓`}
+      <div className="name-detail-footer">
+        <div><p>{copy.notes}: {row.notes || "—"}</p>{row.credit ? <p className="mt-1 text-stone">Contributed by {row.credit}</p> : null}</div>
+        <button type="button" disabled={exporting} onClick={() => void exportName()} className="name-export">
+          <Download size={16} aria-hidden />{exporting ? copy.exporting : copy.export}
         </button>
       </div>
-      {exportError ? <p role="alert" className="border-t border-accent px-5 py-3 text-[12px] text-accent">{exportError}</p> : null}
-    </SpotlightCard>
+    </div>
+  );
+  return (
+    <article className={`name-entry ${expanded || sheetOpen ? "name-entry-selected" : ""}`}>
+      <div className="name-row">
+        <span className="name-number">{String(index).padStart(2, "0")}</span>
+        {cells.map((cell) => (
+          <div key={cell.key} className="name-cell" lang={cell.key === "mon" ? "mnw" : cell.key === "burmese" ? "my" : "en"}>
+            <span className="name-mobile-label">{cell.label}</span>
+            <span className={`name-spelling ${cell.script ? "font-script" : ""}`}>{selected[cell.key] || "—"}</span>
+            <button type="button" disabled={!selected[cell.key]} onClick={() => void copyValue(cell.key)}
+              className="name-copy" aria-label={`${copy.copy} ${cell.label}: ${selected[cell.key]}`}>
+              {copied === cell.key ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
+            </button>
+          </div>
+        ))}
+        <button type="button" className="name-disclosure" onClick={openDetails}
+          aria-expanded={expanded || sheetOpen} aria-controls={expanded ? detailId : undefined}
+          aria-label={`${copy.choose} · ${selected.english || selected.mon}`}>
+          <span>{copy.choose}</span><ChevronRight size={16} aria-hidden className={expanded ? "rotate-90" : ""} />
+        </button>
+      </div>
+      {expanded ? <div id={detailId} className="name-desktop-details">{details}</div> : null}
+      {sheetOpen ? <dialog ref={sheet} className="name-sheet" aria-labelledby={`${detailId}-sheet-title`}
+        onCancel={() => setSheetOpen(false)} onClose={() => setSheetOpen(false)}
+        onClick={(event) => { if (event.target === event.currentTarget) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientY < rect.top) setSheetOpen(false); } }}>
+        <div className="name-sheet-header">
+          <h2 id={`${detailId}-sheet-title`} className="font-script">{selected.mon} <span className="font-display">/ {selected.english}</span></h2>
+          <button type="button" autoFocus onClick={() => setSheetOpen(false)} aria-label="Close"><X size={20} /></button>
+        </div>
+        {details}
+        {exportError ? <p role="alert" className="px-4 py-3 text-sm text-accent">{exportError}</p> : null}
+      </dialog> : null}
+      <span className="sr-only" role="status">{copied ? copy.copied : ""}</span>
+      {exportError && !sheetOpen ? <p role="alert" className="px-4 py-3 text-sm text-accent">{exportError}</p> : null}
+    </article>
   );
 }
