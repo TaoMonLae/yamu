@@ -20,7 +20,7 @@ const PEOPLE = [
   {
     id: "ahhtet-coonmon", number: "02", name: "AhHtet CoonMon", role: "Mon artist · Name contributor",
     image: "/people/ahhtet-coonmon.jpg", imageSource: "https://www.pinterest.com/ahhtet/", imageLabel: "Pinterest",
-    bio: "AhHtet shares photography and illustration through his public creative profiles. He is the parent of Mi Panyun cartoon. He is a doctor by training with a Bachelor of Medicine, Bachelor of Surgery (M.B.B.S.) in Medical Science at the University of Medicine, Magway, Myanmar, from 2009 to 2015.",
+    bio: "AhHtet shares photography and illustration through his public creative profiles. He is the parent of the unique Mi Panyun cartoon character and CoonMon Yamu Mon [ကောန်မန်ယၟုမန်] where he contributes Mon names on Facebook. He is a doctor by training with a Bachelor of Medicine, Bachelor of Surgery (M.B.B.S.) in Medical Science at the University of Medicine, Magway, Myanmar, from 2009 to 2015.",
     contribution: "Thank you for contributing names in Mon and English, and for sharing the cultural knowledge behind them.",
     href: "https://www.instagram.com/ahhtet93/", linkLabel: "Explore his work",
     bioSource: "https://www.linkedin.com/in/ahhtet-coonmon-35468a127/", bioSourceLabel: "Education / LinkedIn",
@@ -65,7 +65,7 @@ export function AboutApp() {
         <div className="about-story-copy">
           <p className="micro-label text-ash">01 / A note from the maintainer</p>
           <h2 id="story-heading">It started in a classroom.</h2>
-          <p>I&apos;m Tao Mon Lae [တုမန်လဴ]. I am also known as Min Htet Min Aung. I studied computing and now work as a teacher and in refugee community in humanitarian fields. In schools, I kept seeing junior teachers unsure how to write Mon and Burmese names in English. YAMU - ယၟု began as a way to help.</p>
+          <p>I&apos;m Tao Mon Lae [တုမန်လဴ]. I am also known as Min Htet Min Aung. I studied computing and now work as a teacher and in refugee community in humanitarian fields. In schools, I kept seeing junior teachers unsure how to write Mon and Burmese names in English. YAMU - ယၟု began as a way to help. YAMU - ယၟု is inpired from CoonMon Yamu Mon.</p>
           <p>Teaching took me away from regular software work in 2018, but my interest in Mon language technology never went away. From Kuala Lumpur, I still explore localization, keyboards, and Mon subtitles — tools that help our language feel at home on modern devices.</p>
           <p>The name index sat unfinished until a conversation with Oung Seik brought me back to it. He had been thinking about the same problem. That shared concern became the reason to finish.</p>
           <p className="about-signature">A name should keep its roots, wherever it travels.</p>
