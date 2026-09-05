@@ -11,55 +11,55 @@ msgid "ယၟု / Mon / Burmese / English"
 msgstr "ယၟု / မန် / ဗၟာ / အင်္ဂလိက်"
 
 msgid "Search"
-msgstr ""
+msgstr "ဂၠာဲ"
 
 msgid "Naming"
-msgstr ""
+msgstr "ခုတ်ယၟု"
 
 msgid "About"
-msgstr ""
+msgstr "ပရူ"
 
 msgid "Language"
-msgstr ""
+msgstr "အရေဝ်ဘာသာ"
 
 msgid "Interface language"
-msgstr ""
+msgstr "ဘာသာ စကာ"
 
 msgid "Main navigation"
-msgstr ""
+msgstr "သ္ဇိုၚ် က္ဍိုပ်လိက်"
 
 msgid "Public pages"
-msgstr ""
+msgstr "မုက်လိက် သွက်ညးဂမၠိုၚ်"
 
 msgid "More options"
-msgstr ""
+msgstr "တၚ်ရုဲစှ် တၞဟ်သ္အာၚ်"
 
 msgid "Sign in"
-msgstr ""
+msgstr "လုပ်"
 
 msgid "Team sign in"
-msgstr ""
+msgstr "ဂကောံ လုပ် စရၚ်"
 
 msgid "Admin panel"
-msgstr ""
+msgstr "ဒၞာဲ ညးကောပ်ကာဲ"
 
 msgid "Admin"
 msgstr "ကောပ်ကာဲ"
 
 msgid "Use light mode"
-msgstr ""
+msgstr "စကာ ဗီုပြင် တၟး"
 
 msgid "Use dark mode"
-msgstr ""
+msgstr "စကာ ဗီုပြင် ဒမၠု"
 
 msgid "Appearance"
-msgstr ""
+msgstr "ဗီုပြင် မုက်ဂတဲ"
 
 msgid "Look up a name"
 msgstr "ဂၠာဲ ယၟု"
 
 msgid "Find a name."
-msgstr ""
+msgstr "ဂၠာဲ ယၟုမွဲညိ။"
 
 msgid "Trilingual name lookup — Mon / Burmese / English"
 msgstr "ဂၠာဲယၟု ဘာသာပိ — မန် / ဗၟာ / အင်္ဂလိက်"
@@ -77,7 +77,7 @@ msgid "Look up"
 msgstr "ဂၠာဲ"
 
 msgid "Source"
-msgstr "ဘာသာတမ်"
+msgstr "တမ်ရိုဟ်"
 
 msgid "Auto"
 msgstr "အလဵုအလဵု"
@@ -92,7 +92,7 @@ msgid "English"
 msgstr "အေၚ်္ဂလိက်"
 
 msgid "The catalog is ready. Enter a name to see its three forms."
-msgstr "လိက်ကၞပ် သ္ဇိုၚ်တုဲရ။ စုတ် ယၟုညိ။"
+msgstr "လိက်ကၞပ်တုဲရ။ စုတ် ယၟုညိ။"
 
 msgid "No catalog row matches that spelling."
 msgstr "ယၟု မကိတ်ညဳ ကုလိက်ဝွံ ဟွံမွဲ။"
@@ -170,292 +170,292 @@ msgid "Received. The catalog desk will review it."
 msgstr "ဒုၚ်တဲတုဲရ။ ပကင်ရင် သ္ဂောံစၟဳစၟတ်။"
 
 msgid "Search is temporarily unavailable."
-msgstr ""
+msgstr "ပရေၚ်ဂၠာဲယၟု ကၟာတ်လဝ် ဆဒ္ဒေတ်ညိ။"
 
 msgid "Search failed."
-msgstr ""
+msgstr "ဂၠာဲယၟု ဟွံအံၚ်ဇၞး။"
 
 msgid "Indexing…"
-msgstr ""
+msgstr "ပလေဝ်မံၚ် စရၚ်…"
 
 msgid "Clear search"
-msgstr ""
+msgstr "သ္အး ပရေၚ်ဂၠာဲ"
 
 msgid "Searched “{query}”"
-msgstr ""
+msgstr "ဂၠာဲလဝ် “{query}”"
 
 msgid "Order preserved"
-msgstr ""
+msgstr "အတိုၚ်လၟေၚ်တြေံ"
 
 msgid "No match"
-msgstr ""
+msgstr "ဟွံကိတ်ညဳ"
 
 msgid "Could not load the brand logo."
-msgstr ""
+msgstr "ပံက် တဆိပ် ဟွံဂွံ။"
 
 msgid "Canvas is not available."
-msgstr ""
+msgstr "Canvas ဟွံမွဲ။"
 
 msgid "Not mapped"
-msgstr ""
+msgstr "ဟွံစၠောံလဝ်ဏီ"
 
 msgid "Specimen {number}"
-msgstr ""
+msgstr "နမူနာ {number}"
 
 msgid "Catalog entry"
-msgstr ""
+msgstr "စရၚ်ယၟု ပ္ဍဲလိက်ကၞပ်"
 
 msgid "Contributed by {name}"
-msgstr ""
+msgstr "{name} ထံက်ပၚ်လဝ်"
 
 msgid "Trilingual proof"
-msgstr ""
+msgstr "သက်သဳ လိက်ပိဘာသာ"
 
 msgid "Could not render PNG."
-msgstr ""
+msgstr "ကၠောန်ပ္တိတ် PNG ဟွံဂွံ။"
 
 msgid "Could not export PNG."
-msgstr ""
+msgstr "ပ္တိတ် PNG ဟွံဂွံ။"
 
 msgid "Could not copy. Please select and copy the spelling manually."
-msgstr ""
+msgstr "စၠောအ် ဟွံဂွံ။ သ္ပဂုန်တုဲ ရုဲစှ် စၠောအ်ကေတ် နကဵုတဲညိ။"
 
 msgid "Close"
-msgstr ""
+msgstr "ကၟာတ်"
 
 msgid "Could not send the suggestion."
-msgstr ""
+msgstr "ပလံၚ် တၚ်ပတိုန်ထ္ၜး ဟွံဂွံ။"
 
 msgid "Contribution ticket"
-msgstr ""
+msgstr "တၞးစၟတ်သမ္တီ ထံက်ပၚ်"
 
 msgid "Word desk"
-msgstr ""
+msgstr "ဒၞာဲကေၚ်ကာ မအရေဝ်"
 
 msgid "One spelling is enough. Add the matching forms only if you know them; the catalog desk verifies every entry."
-msgstr ""
+msgstr "စုတ် မလိက်မွဲဂကူ ရုမ်ဂပ်ရ။ သၟေဟ်နူဂှ် ယဝ်တီမ္ဂး ထပ်စုတ်ညိ၊ ညးကောပ်ကာဲ စၟဳစၟတ် သ္ပဒတန် သီုဖအိုတ်ရောၚ်။"
 
 msgid "Choose missing word"
-msgstr ""
+msgstr "ရုဲစှ် မအရေဝ် မဟွံမွဲဏီ"
 
 msgid "Ticket received"
-msgstr ""
+msgstr "ဒုၚ်တဲ တၞးစၟတ်တုဲရ"
 
 msgid "Thank you for helping the catalog grow."
-msgstr ""
+msgstr "ထံက်ပၚ်ကဵု လိက်ကၞပ် သ္ဂောံဇၞော်မောဝ်တုဲ တၚ်ဂုဏ်ရအဴ။"
 
 msgid "If approved, this entry will show “Contributed by {name}.”"
-msgstr ""
+msgstr "ယဝ်ဒုၚ်တဲမ္ဂး စရၚ်ဝွံ ကဵုလဝ်စၟတ် “{name} ထံက်ပၚ်လဝ်” ရောၚ်။"
 
 msgid "An admin will verify the three spellings before the entry appears in search."
-msgstr ""
+msgstr "ကိုပ်ကၠာ ဟွံဂွံမံက် ပ္ဍဲဒၞာဲဂၠာဲ၊ ညးကောပ်ကာဲ သ္ၚေဝ်ဂၠာဲ စၟဳစၟတ် မလိက်ပိဘာသာရောၚ်။"
 
 msgid "Add another word"
-msgstr ""
+msgstr "ထပ်စုတ် မအရေဝ် တၞဟ်"
 
 msgid "I know another spelling"
-msgstr ""
+msgstr "အဲ တီလဝ် မလိက်တၞဟ် နွံမံၚ်"
 
 msgid "Optional Mon, Burmese, or English forms"
-msgstr ""
+msgstr "ဗီုပြင် မန်၊ ဗၟာ ဟွံသေၚ်မ္ဂး အင်္ဂလိက် (ဟွံစုတ်လေဝ်ဂွံ)"
 
 msgid "Credit name"
-msgstr ""
+msgstr "ယၟု သွက်ဂွံ စၟတ်သမ္တီ"
 
 msgid "optional"
-msgstr ""
+msgstr "ဟွံစုတ်လေဝ်ဂွံ"
 
 msgid "Name shown after approval"
-msgstr ""
+msgstr "ယၟု မံက်ဂတဝ် ကြဴနူ ပကင်ရင် ဒုၚ်တဲတုဲ"
 
 msgid "Public only if the word is approved. No email required."
-msgstr ""
+msgstr "မအရေဝ် ဒုၚ်တဲတုဲဟေၚ် ထ္ၜးကဵု ညးဂမၠိုၚ်ရောၚ်။ အဳမေဝ် ဟွံဒးစုတ်။"
 
 msgid "Helpful note"
-msgstr ""
+msgstr "စၟတ်သမ္တီ မကဵုအရီုအဗၚ်"
 
 msgid "Pronunciation, source, or where you saw it"
-msgstr ""
+msgstr "ရမျာၚ်၊ တမ်မူလ ဟွံသေၚ်မ္ဂး ဒၞာဲ မဆဵုလဝ်"
 
 msgid "Review queue · credit after approval"
-msgstr ""
+msgstr "လၟေၚ်သ္ၚေဝ်ဂၠာဲ · ဒုၚ်တဲတုဲဟေၚ် စၟတ်သမ္တီကဵုယၟု"
 
 msgid "Send contribution →"
-msgstr ""
+msgstr "ပလံၚ် တၚ်ထံက်ပၚ် →"
 
 msgid "Found while searching:"
-msgstr ""
+msgstr "ဆဵု ပ္ဍဲအခိၚ် မဂၠာဲမံၚ် -"
 
 msgid "Report bug"
-msgstr ""
+msgstr "ပလံၚ် တၚ်ဆောတ်ယောၚ်"
 
 msgid "Could not send the report."
-msgstr ""
+msgstr "ပလံၚ် လိက်ပရိုၚ် ဟွံဂွံ။"
 
 msgid "Issue desk"
-msgstr ""
+msgstr "ဒၞာဲကေၚ်ကာ တၚ်ဆောတ်ယောၚ်"
 
 msgid "Something went wrong?"
-msgstr ""
+msgstr "တၚ်ဆောတ်ယောၚ်မွဲမွဲနွံဟာ။"
 
 msgid "Describe what you expected and what happened. The current page is attached automatically."
-msgstr ""
+msgstr "မုဒှ်အာ ကဵု မုမိက်ဂွံဒှ် ချူထ္ၜးညိ။ မုက်လိက် လၟုဟ်ဝွံ စုတ်ကဵု အလဵုအလဵုရောၚ်။"
 
 msgid "Close bug report"
-msgstr ""
+msgstr "ကၟာတ် လိက်ပရိုၚ် တၚ်ဆောတ်ယောၚ်"
 
 msgid "Report received"
-msgstr ""
+msgstr "ဒုၚ်တဲ လိက်ပရိုၚ် တုဲရ"
 
 msgid "Thank you. It is now on the admin docket."
-msgstr ""
+msgstr "တၚ်ဂုဏ်ရအဴ။ လၟုဟ် စိုပ် ပ္ဍဲစရၚ် ညးကောပ်ကာဲတုဲရ။"
 
 msgid "Close issue desk"
-msgstr ""
+msgstr "ကၟာတ် ဒၞာဲကေၚ်ကာ တၚ်ဆောတ်ယောၚ်"
 
 msgid "Short summary"
-msgstr ""
+msgstr "တၚ်ပကောံ ဗွဲခမၞန်"
 
 msgid "Example: Search button stops responding"
-msgstr ""
+msgstr "ဥပမာ - ဍဵု မဂၠာဲ ဟွံကၠောန်ကမၠောန်"
 
 msgid "What happened?"
-msgstr ""
+msgstr "မု ဒှ်အာရော။"
 
 msgid "What did you do, what did you expect, and what happened instead?"
-msgstr ""
+msgstr "မုမၞး ကၠောန်လဝ်ရော၊ မု မိက်ဂွံကဵုဒှ်လဝ်ရော၊ တုဲပၠန် မု ဒှ်အာရော။"
 
 msgid "Reporter name"
-msgstr ""
+msgstr "ယၟု ညးပလံၚ်"
 
 msgid "optional, private"
-msgstr ""
+msgstr "ဟွံစုတ်လေဝ်ဂွံ၊ ပၞုက်လဝ်"
 
 msgid "Helps the admin recognize your report"
-msgstr ""
+msgstr "ကဵုအာရီုဗၚ် သွက်ညးကောပ်ကာဲ သ္ဂောံတီ လိက်မၞး"
 
 msgid "Page captured · no screenshot or email"
-msgstr ""
+msgstr "စၟတ်လဝ် မုက်လိက်တုဲ · ဓဇက်ရုပ် ဟွံသေၚ် အဳမေဝ် ဟွံဒးနွံ"
 
 msgid "Cancel"
-msgstr ""
+msgstr "တးပဲါ"
 
 msgid "Send report →"
-msgstr ""
+msgstr "ပလံၚ် လိက်ပရိုၚ် →"
 
 msgid "Name search"
-msgstr ""
+msgstr "ဂၠာဲယၟု"
 
 msgid "Old Mon naming method / 01"
-msgstr ""
+msgstr "နဲခုတ်ယၟု-နဲမန်တမၠာ / ၀၁"
 
 msgid "Traditional name reading"
-msgstr ""
+msgstr "အခိုက်ကၞာတၚ်ယၟု"
 
 msgid "Read the pattern inside a Mon name."
-msgstr ""
+msgstr "ဂၠိုက်ဂၠာဲနာံပ္ဍဲယၟုမန်"
 
 msgid "This tool applies the seven-day character system recorded in the old Mon naming method. Choose the birth day, enter the full Mon name, and see how each component is read."
-msgstr ""
+msgstr "ကိရိယာဝွံ စကာလဝ် သၞောတ်အက္ခရ် နာံတ္ၚဲထပှ် အတိုၚ်နဲခုတ်ယၟုမန်တမၠာ ရောၚ်။ ရုဲစှ် တ္ၚဲက္တဵုဒှ်မၞိဟ်၊ စုတ် ယၟုမန် အပ္ဍဲပေၚ်ၚ် တုဲ သ္ၚေဝ်ရံၚ် ဗီုဗှ်မလိက်မွဲမွဲညိ။"
 
 msgid "Birth day"
-msgstr ""
+msgstr "တ္ၚဲက္တဵုဒှ်မၞိဟ်"
 
 msgid "Choose the day."
-msgstr ""
+msgstr "ရုဲစှ်တ္ၚဲ"
 
 msgid "Mon name"
-msgstr ""
+msgstr "ယၟုမန်"
 
 msgid "Enter the full name."
-msgstr ""
+msgstr "တက်စုန်ယၟုမန်ပေၚ်ၚ်ညိ"
 
 msgid "Starting titles မာံ, နာဲ, မိ are excluded. The same words in the middle or at the end are read as part of the name."
-msgstr ""
+msgstr "ယၟုအစ မာံ၊ နာဲ၊ မိ တအ်ဂှ် ပ္တိတ်လဝ်ရ။ "
 
 msgid "Use the {day} example"
-msgstr ""
+msgstr "စကာ ဥပမာ {day}"
 
 msgid "Reading"
-msgstr ""
+msgstr "တော်ဒၟံၚ်"
 
 msgid "Good"
-msgstr ""
+msgstr "ခိုဟ်"
 
 msgid "OK"
-msgstr ""
+msgstr "ဓမ္မတာ"
 
 msgid "Bad"
-msgstr ""
+msgstr "ပရေံ"
 
 msgid "No bad components in this reading."
-msgstr ""
+msgstr "ယၟုလ္ပါ်စှ်ေဟွံပါရ"
 
 msgid "One bad component is acceptable in this method."
-msgstr ""
+msgstr "ပ္ဍဲကဵုနဲဏအ်မ္ဂးယၟုလ္ပါ်စှ်ေဂှ်ပါလုပ်မွဲမ္ဂး ဒုၚ်တဲဂွံရ"
 
 msgid "Two or more components have a bad reading."
-msgstr ""
+msgstr "ယၟု ကိုန်လ္ပါ်စှ်ေပဵုနူကဵုမွဲမ္ဂး တော်ဗှ်အာ နဒဒှ် ယၟု ကိုန်စှ်ေရ"
 
 msgid "{count} bad"
-msgstr ""
+msgstr "ကိုန်စှ်ေ {count} မ"
 
 msgid "Starting title excluded from the reading"
-msgstr ""
+msgstr "ယၟုအစ တအ်ဂှ် ပ္တိတ်လဝ်ရ"
 
 msgid "starts with {initial} / day {day}"
-msgstr ""
+msgstr "စ နကဵု {initial} / တ္ၚဲ {day}"
 
 msgid "Enter a Mon name to see its components. Punctuation and unsupported characters are ignored."
-msgstr ""
+msgstr "စုတ်ယၟုမန် သွက်ဂွံသ္ၚေဝ်ရံၚ် အက္ခရ်ဂမၠိုၚ်ညိ။ သင်္ကေတ ကေုာံ မလိက်ဟွံကိတ်ညဳတအ်ဂှ် ဟွံစုတ် ပ္ဍဲလၟေၚ်ရ။"
 
 msgid "How the result is decided"
-msgstr ""
+msgstr "ရလဒ် ဒုၚ်သဇိုၚ် ကုမုရော"
 
 msgid "The whole pattern matters."
-msgstr ""
+msgstr "လၟေၚ်အက္ခရ် သီုဖအိုတ် ကိစ္စဇၞော်ရ။"
 
 msgid "bad component"
-msgstr ""
+msgstr "ကိုန်စှ်ေ"
 
 msgid "bad components"
-msgstr ""
+msgstr "ကိုန်စှ်ေဂမၠိုၚ်"
 
 msgid "This is a cultural naming reference, not a scientific prediction or a guarantee about a person's future."
-msgstr ""
+msgstr "ဣဝွံ ဒှ်တၚ်သမ္တီ အခိုက်ကၞာ ခုတ်ယၟုဟေၚ်၊ ဟွံဒှ် တၚ်ဟီုကြီု သိပ္ပံ ဟွံသေၚ်မ္ဂး ကံကုသဵု အနာဂတ် ပူဂိုလ်မွဲမွဲရ။"
 
 msgid "The people"
-msgstr ""
+msgstr "မၞိဟ်ဂမၠိုၚ်"
 
 msgid "YAMU / The story behind the index"
-msgstr ""
+msgstr "YAMU / ပရူပရာ လက္ကရဴ လိက်ကၞပ်"
 
 msgid "Names connect us. People make it possible."
-msgstr ""
+msgstr "ယၟုဂမၠိုၚ် ဆက်စပ်ကဵုပိုဲ။ မၞိဟ်တံ ဖန်ဗဒှ်ကဵု ဒှ်ကၠုၚ်။"
 
 msgid "A reference for names across Mon, Burmese, and English — built from a teacher's everyday question, and made better by people who care."
-msgstr ""
+msgstr "သ္ဇိုၚ်လိက်ကၞပ် ယၟုမန်၊ ဗၟာ၊ အင်္ဂလိက် — စကၠုၚ် နူတၚ်သၟာန် မသ္ၚေဝ်ဂၠာဲအ္စာဘာမွဲတၠတုဲ ကောန်ဂကူ မဆာန်လိက်တံ ထပ်ဗပေၚ်လဝ်ကဵုရ။"
 
 msgid "Three scripts, one name"
-msgstr ""
+msgstr "လိက်ပိဂကူ၊ ယၟုမွဲ"
 
 msgid "Mon / Burmese / English"
-msgstr ""
+msgstr "မန် / ဗၟာ / အင်္ဂလိက်"
 
 msgid "Keep the roots. Find the spelling."
-msgstr ""
+msgstr "မၚ်မွဲ တမ်ရိုဟ်။ ဂၠာဲ မလိက်။"
 
 msgid "Tao Mon Lae speaking during a technology presentation"
-msgstr ""
+msgstr "Tao Mon Lae ဟီုတွံမံၚ် ပ္ဍဲပေါဲဟီုတွံ ပရေၚ်အိုၚ်ထီ"
 
 msgid "Teacher · Creator of YAMU"
-msgstr ""
+msgstr "အ္စာဘာ · ညးမဖန်ဗဒှ် YAMU"
 
 msgid "A note from the maintainer"
-msgstr ""
+msgstr "တၚ်သမ္တီ နူညးမၚ်မွဲ"
 
 msgid "It started in a classroom."
-msgstr ""
+msgstr "စကၠုၚ် နူဘာဗ္တောန်လိက်မွဲ။"
 
 msgid "I'm Tao Mon Lae [တုမန်လဴ]. I am also known as Min Htet Min Aung. I studied computing and now work as a teacher and in refugee community in humanitarian fields. In schools, I kept seeing junior teachers unsure how to write Mon and Burmese names in English. YAMU - ယၟု began as a way to help. YAMU - ယၟု is inspired by CoonMon Yamu Mon."
 msgstr ""
@@ -488,10 +488,10 @@ msgid "Explore his work"
 msgstr ""
 
 msgid "Photo: {source}"
-msgstr ""
+msgstr "ရုပ် - {source}"
 
 msgid "Keep it useful"
-msgstr ""
+msgstr "မၚ်မွဲ ညံၚ်သ္ဂောံစကာဂွံညိ"
 
 msgid "One good spelling helps the next person."
 msgstr ""
@@ -500,22 +500,22 @@ msgid "Find a name. Suggest a correction. Or help improve the code. This index i
 msgstr ""
 
 msgid "Search names"
-msgstr ""
+msgstr "ဂၠာဲ ယၟုဂမၠိုၚ်"
 
 msgid "Contribute on GitHub"
-msgstr ""
+msgstr "ထံက်ပၚ် ပ္ဍဲ GitHub"
 
 msgid "Built with care for Mon names."
-msgstr ""
+msgstr "ခၞံဗဒှ်လဝ် နကဵုစိုတ် မဆာန်ယၟုမန်။"
 
 msgid "Team access"
-msgstr ""
+msgstr "လုပ်ဒၞာဲ ဂကောံ"
 
 msgid "Software engineer · Idea catalyst"
-msgstr ""
+msgstr "အေန်ဂျေန်နဳယာ သပ်ဝဴ · ညးမကဵုလညာတ်"
 
 msgid "Mon artist · Name contributor"
-msgstr ""
+msgstr "အ္စာကသူမန် · ညးထံက်ပၚ်ယၟု"
 
 msgid "Oung Seik Nyan introduces himself as a back-end and full-stack developer. He studied mathematics at Mawlamyine University and shares an interest in computer science, systems programming, and Linux."
 msgstr ""
@@ -533,89 +533,89 @@ msgid "Naming page navigation"
 msgstr ""
 
 msgid "About page navigation"
-msgstr ""
+msgstr "သ္ဇိုၚ်က္ဍိုပ်လိက် မုက်လိက်ပရူပိုဲ"
 
 msgid "{name} — public profile portrait"
-msgstr ""
+msgstr "{name} — ရုပ်ပရဵုဝှါၚ်"
 
 msgid "{name} portrait source: {source}"
-msgstr ""
+msgstr "{name} တမ်ရိုဟ်ရုပ် - {source}"
 
 msgid "Profile / GitHub"
-msgstr ""
+msgstr "ပရဵုဝှါၚ် / GitHub"
 
 msgid "Education / LinkedIn"
-msgstr ""
+msgstr "ပရေၚ်ပညာ / LinkedIn"
 
 msgid "SUN"
-msgstr ""
+msgstr "အဒိုတ်"
 
 msgid "MON"
-msgstr ""
+msgstr "စန်"
 
 msgid "TUE"
-msgstr ""
+msgstr "အၚါ"
 
 msgid "WED"
-msgstr ""
+msgstr "ဝါ"
 
 msgid "THU"
-msgstr ""
+msgstr "ဗြဴပတိ"
 
 msgid "FRI"
-msgstr ""
+msgstr "သိုက်"
 
 msgid "SAT"
-msgstr ""
+msgstr "သ္ၚိသဝ်"
 
 msgid "Sunday"
-msgstr ""
+msgstr "တ္ၚဲအဒိုတ်"
 
 msgid "Monday"
-msgstr ""
+msgstr "တ္ၚဲစန်"
 
 msgid "Tuesday"
-msgstr ""
+msgstr "တ္ၚဲအၚါ"
 
 msgid "Wednesday"
-msgstr ""
+msgstr "တ္ၚဲဗုဒ္ဓဝါ"
 
 msgid "Thursday"
-msgstr ""
+msgstr "တ္ၚဲဗြဴပတိ"
 
 msgid "Friday"
-msgstr ""
+msgstr "တ္ၚဲသိုက်"
 
 msgid "Saturday"
-msgstr ""
+msgstr "တ္ၚဲသ္ၚိသဝ်"
 
 msgid "King"
-msgstr ""
+msgstr "သၟိၚ်"
 
 msgid "Wealth"
-msgstr ""
+msgstr "သမ္ၚေဟ်"
 
 msgid "Glory"
-msgstr ""
+msgstr "သေဌီ"
 
 msgid "Poverty"
-msgstr ""
+msgstr "ဒိုက်ဂတ်"
 
 msgid "Loss"
-msgstr ""
+msgstr "ပြိုတ်"
 
 msgid "Animal"
-msgstr ""
+msgstr "တရိစ္ဆာန်"
 
 msgid "good"
-msgstr ""
+msgstr "ခိုဟ်"
 
 msgid "normal"
-msgstr ""
+msgstr "ဓမ္မတာ"
 
 msgid "bad"
-msgstr ""
+msgstr "ပရေံ"
 
 msgid "Bug"
-msgstr ""
+msgstr "ဆောတ်ယောၚ်"
 
