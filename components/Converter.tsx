@@ -51,6 +51,15 @@ export function Converter() {
     }
   }, []);
 
+  function invalidateLookup() {
+    lookupVersion.current += 1;
+    lookupAbort.current?.abort();
+    setResults(null);
+    setSearchMeta({ mode: "single", tokens: [], missingTokens: [] });
+    setError("");
+    setPending(false);
+  }
+
   function changeLang(next: UiLanguage) {
     setLang(next);
     window.localStorage.setItem("ui-lang", next);
@@ -75,7 +84,9 @@ export function Converter() {
     try {
       const params = new URLSearchParams({ q: value, source: nextSource });
       const response = await fetch(`/api/search?${params}`, { signal: controller.signal });
-      const data = (await response.json()) as SearchResultSet & { error?: string };
+      const data = (await response.json().catch(() => {
+        throw new Error(tr("Search is temporarily unavailable."));
+      })) as SearchResultSet & { error?: string };
       if (!response.ok) throw new Error(data.error || tr("Search is temporarily unavailable."));
       if (requestVersion !== lookupVersion.current) return;
       setResults(data.results);
@@ -118,11 +129,12 @@ export function Converter() {
   }
 
   const status = useMemo(() => {
+    if (error) return translate(lang, "Search failed.");
     if (pending) return translate(lang, "Indexing…");
     if (results === null) return copy.empty;
     if (!results.length) return copy.none;
     return `${String(results.length).padStart(2, "0")} ${copy.matches}`;
-  }, [copy.empty, copy.matches, copy.none, lang, pending, results]);
+  }, [copy.empty, copy.matches, copy.none, lang, pending, results, error]);
 
   const suggestionSource = source === "auto"
     ? detectSource(searchMeta.missingTokens[0] ?? query) === "burmese" && lang === "mon"
@@ -147,10 +159,10 @@ export function Converter() {
               <Search size={20} aria-hidden />
               <input id="name-query" name="name" type="search" enterKeyHint="search"
                 value={query} maxLength={200} autoComplete="off" spellCheck={false}
-                onChange={(event) => { setSuggesting(false); setQuery(event.target.value); }}
+                onChange={(event) => { invalidateLookup(); setSuggesting(false); setQuery(event.target.value); }}
                 placeholder={copy.placeholder} className={queryUsesMyanmarScript ? "font-script" : ""} />
               {query ? <button type="button" className="name-clear" aria-label={tr("Clear search")}
-                onClick={() => { setQuery(""); setSuggesting(false); document.getElementById("name-query")?.focus(); }}><X size={18} /></button> : null}
+                onClick={() => { invalidateLookup(); setQuery(""); setSuggesting(false); document.getElementById("name-query")?.focus(); }}><X size={18} /></button> : null}
               <button type="submit" disabled={pending} className="name-submit" aria-label={copy.search}>
                 <span>{pending ? "…" : copy.search}</span><ArrowRight size={22} aria-hidden />
               </button>
@@ -158,7 +170,7 @@ export function Converter() {
             <div className="name-search-options">
               <fieldset className="name-source"><legend className="sr-only">{copy.source}</legend>
                 {SOURCES.map((item) => <button key={item} type="button" aria-pressed={source === item}
-                  onClick={() => { setSource(item); setSuggesting(false); }}
+                  onClick={() => { if (item !== source) invalidateLookup(); setSource(item); setSuggesting(false); }}
                   className={usesMyanmarScript ? "font-script" : ""}>
                   {item === "auto" ? copy.auto : copy[item]}
                 </button>)}
@@ -202,7 +214,7 @@ export function Converter() {
             {results?.map((row, index) => (
               <SpecimenRow key={specimenResultKey(row)} row={row} lang={lang} index={index + 1} />
             ))}
-            {!pending && results?.length === 0 && query.trim() ? suggesting ? (
+            {!error && !pending && results?.length === 0 && query.trim() ? suggesting ? (
               <SuggestionCard
                 key={`${query}-${searchMeta.missingTokens.join("|")}`}
                 query={query}

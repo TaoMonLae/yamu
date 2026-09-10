@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { DepthCard } from "@/components/reactbits/DepthCard";
 import { ShinyText } from "@/components/reactbits/ShinyText";
 import { translate } from "@/lib/i18n";
@@ -15,21 +15,24 @@ export function ReportBugButton({ lang = "english", compact = false, menuItem = 
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   const summaryRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    const dialog = dialogRef.current;
+    const trigger = triggerRef.current;
+    dialog?.showModal();
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    setReporter(window.localStorage.getItem("yamu-contributor-name") ?? "");
-    window.setTimeout(() => summaryRef.current?.focus(), 0);
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
+    try { setReporter(window.localStorage.getItem("yamu-contributor-name") ?? ""); } catch { /* Storage is optional. */ }
+    summaryRef.current?.focus();
     return () => {
+      dialog?.close();
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", onKeyDown);
+      trigger?.focus();
     };
   }, [open]);
 
@@ -68,20 +71,20 @@ export function ReportBugButton({ lang = "english", compact = false, menuItem = 
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={menuItem ? "" : "relative flex min-w-10 items-center justify-center border-r border-pewter px-2 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-ink transition-colors hover:bg-mist sm:min-w-0 sm:px-4"} aria-haspopup="dialog" aria-label={tr("Report bug")} title={compact ? tr("Report bug") : undefined}>
+      <button ref={triggerRef} type="button" onClick={() => setOpen(true)} className={menuItem ? "" : "relative flex min-w-10 items-center justify-center border-r border-pewter px-2 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-ink transition-colors hover:bg-mist sm:min-w-0 sm:px-4"} aria-haspopup="dialog" aria-label={tr("Report bug")} title={compact ? tr("Report bug") : undefined}>
         {compact ? <span aria-hidden="true">!</span> : <><span className="sm:hidden" aria-hidden="true">!</span><span className="hidden sm:inline">{tr("Report bug")}</span></>}
       </button>
       {open ? (
-        <div className="theme-overlay issue-desk-overlay fixed inset-0 z-[80] grid place-items-center overflow-y-auto p-3 sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}>
+        <dialog ref={dialogRef} aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); close(); }} className="theme-overlay issue-desk-overlay fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-transparent p-3 open:grid open:place-items-center overflow-y-auto text-ink backdrop:bg-black/50 sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}>
           <DepthCard className="w-full max-w-2xl" maxRotation={1} maxTranslation={1} spotlightColor="color-mix(in srgb, var(--index-accent) 12%, transparent)">
-            <section role="dialog" aria-modal="true" aria-labelledby="bug-report-title" className="issue-desk-enter w-full border border-ink bg-canvas shadow-[12px_12px_0_var(--index-ink)]">
+            <section className="issue-desk-enter w-full border border-ink bg-canvas shadow-[12px_12px_0_var(--index-ink)]">
               <div className="grid border-b border-ink sm:grid-cols-[126px_1fr_auto]">
                 <div className="bg-accent px-5 py-4 text-on-accent">
                   <p className="font-display text-[10px] font-semibold uppercase tracking-[0.1em] opacity-70">{tr("Issue desk")}</p>
                   <p className="mt-4 font-display text-[32px] font-semibold leading-none">{tr("Bug")}</p>
                 </div>
                 <div className="px-5 py-5 sm:px-6">
-                  <h2 id="bug-report-title" className="text-[26px] font-semibold tracking-[-0.035em] text-ink">{tr("Something went wrong?")}</h2>
+                  <h2 id={titleId} className="text-[26px] font-semibold tracking-[-0.035em] text-ink">{tr("Something went wrong?")}</h2>
                   <p className="mt-2 max-w-[48ch] text-[12px] leading-5 text-ash">{tr("Describe what you expected and what happened. The current page is attached automatically.")}</p>
                 </div>
                 <button type="button" onClick={close} aria-label={tr("Close bug report")} className="absolute right-5 top-4 text-[26px] text-ink sm:static sm:min-w-16 sm:border-l sm:border-pewter">×</button>
@@ -119,7 +122,7 @@ export function ReportBugButton({ lang = "english", compact = false, menuItem = 
               )}
             </section>
           </DepthCard>
-        </div>
+        </dialog>
       ) : null}
     </>
   );

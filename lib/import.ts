@@ -90,7 +90,9 @@ function tableFromRows(rows: unknown[][]) {
     throw new Error("The file needs a header row and at least one name row.");
   }
 
-  const headers = uniquifyHeaders(cleaned[0]);
+  // Preserve cells beyond a short header row so they can be mapped explicitly.
+  const width = cleaned.reduce((maximum, row) => Math.max(maximum, row.length), 0);
+  const headers = uniquifyHeaders(Array.from({ length: width }, (_, index) => cleaned[0][index] ?? ""));
   const body = cleaned.slice(1).map((row) => {
     const record: Record<string, string> = Object.create(null);
     headers.forEach((header, index) => {

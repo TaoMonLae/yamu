@@ -131,3 +131,13 @@ test("search API explains overlong continuous names with a 400 response", async 
   assert.match((await response.json()).error, /10 name parts/);
   assert.ok(fs.existsSync(path.join(data.directory, "names.db")));
 });
+
+test("short spreadsheet headers do not discard trailing name cells", () => {
+  const { parseSpreadsheet, applyColumnMap } = loadLibrary("lib/import.ts");
+  const parsed = parseSpreadsheet(Buffer.from("mon,burmese\nမန်,မွန်,Mon"), "names.csv");
+  assert.deepEqual(parsed.headers, ["mon", "burmese", "column_3"]);
+  assert.equal(parsed.rows[0].column_3, "Mon");
+  const result = applyColumnMap(parsed.rows, { mon: "mon", burmese: "burmese", column_3: "english" });
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.records[0].english, "Mon");
+});
