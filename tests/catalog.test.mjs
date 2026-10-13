@@ -41,18 +41,32 @@ test("separator-only spelling fields cannot create empty catalog entries", () =>
   }
 });
 
-test("colliding spreadsheet headers preserve every source cell", () => {
+test("colliding spreadsheet headers preserve every source cell", async () => {
   const { parseSpreadsheet } = loadLibrary("lib/import.ts");
-  const parsed = parseSpreadsheet(Buffer.from("mon,mon,mon_2\nfirst,second,third"), "names.csv");
+  const parsed = await parseSpreadsheet(Buffer.from("mon,mon,mon_2\nfirst,second,third"), "names.csv");
   assert.equal(new Set(parsed.headers).size, 3);
   assert.deepEqual(parsed.headers.map((header) => parsed.rows[0][header]), ["first", "second", "third"]);
 });
 
-test("special spreadsheet headers are plain data, not inherited properties", () => {
+test("special spreadsheet headers are plain data, not inherited properties", async () => {
   const { parseSpreadsheet } = loadLibrary("lib/import.ts");
-  const parsed = parseSpreadsheet(Buffer.from("__proto__,constructor,mon\none,two,three"), "names.csv");
+  const parsed = await parseSpreadsheet(Buffer.from("__proto__,constructor,mon\none,two,three"), "names.csv");
   assert.equal(parsed.rows[0].__proto__, "one");
   assert.equal(parsed.suggestedMap.constructor, "skip");
+});
+
+test("XLSX uploads still parse after loading the spreadsheet package on demand", async () => {
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
+    ["mon", "burmese", "english"],
+    ["မန်", "မွန်", "Mon"],
+  ]), "Names");
+  const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+  const { parseSpreadsheet } = loadLibrary("lib/import.ts");
+  const parsed = await parseSpreadsheet(buffer, "names.xlsx");
+  assert.deepEqual(parsed.headers, ["mon", "burmese", "english"]);
+  assert.equal(parsed.rows[0].english, "Mon");
 });
 
 test("deleting the final catalog entry survives a server restart", (t) => {
@@ -132,9 +146,9 @@ test("search API explains overlong continuous names with a 400 response", async 
   assert.ok(fs.existsSync(path.join(data.directory, "names.db")));
 });
 
-test("short spreadsheet headers do not discard trailing name cells", () => {
+test("short spreadsheet headers do not discard trailing name cells", async () => {
   const { parseSpreadsheet, applyColumnMap } = loadLibrary("lib/import.ts");
-  const parsed = parseSpreadsheet(Buffer.from("mon,burmese\nမန်,မွန်,Mon"), "names.csv");
+  const parsed = await parseSpreadsheet(Buffer.from("mon,burmese\nမန်,မွန်,Mon"), "names.csv");
   assert.deepEqual(parsed.headers, ["mon", "burmese", "column_3"]);
   assert.equal(parsed.rows[0].column_3, "Mon");
   const result = applyColumnMap(parsed.rows, { mon: "mon", burmese: "burmese", column_3: "english" });

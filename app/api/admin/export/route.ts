@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import * as XLSX from "xlsx";
 import { requireCapability } from "@/lib/auth";
 import { countNames, listNames } from "@/lib/db";
 
@@ -23,6 +22,7 @@ export async function GET(request: Request) {
   const rows = listNames("", countNames()).reverse();
 
   if (format === "xlsx") {
+    const XLSX = await import("xlsx");
     const worksheet = XLSX.utils.aoa_to_sheet([
       ["Mon", "Burmese", "English", "Notes", "Credit"],
       ...rows.map((row) => [

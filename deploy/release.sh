@@ -28,9 +28,9 @@ cp -a public/. .next/standalone/public/
 cp -a .next/static/. .next/standalone/.next/static/
 
 pm2 startOrReload deploy/ecosystem.config.cjs --update-env
-pm2 save
 
-curl --fail --silent --show-error --retry 8 --retry-delay 2 \
+curl --fail --silent --show-error --retry 8 --retry-connrefused --retry-delay 2 --max-time 5 \
   http://127.0.0.1:3002/ > /dev/null
 
+pm2 save
 echo "Deployment health check passed."

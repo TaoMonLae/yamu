@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const parsed = parseSpreadsheet(buffer, file.name);
+    const parsed = await parseSpreadsheet(buffer, file.name);
     return NextResponse.json({
       filename: file.name.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 200) || "upload",
       headers: parsed.headers,

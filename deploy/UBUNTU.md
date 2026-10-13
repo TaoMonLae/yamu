@@ -78,6 +78,11 @@ The PM2 configuration asks Node to resolve `localhost` over IPv4 first. This
 works around a Next.js standalone middleware rewrite bug while retaining the
 IPv4 loopback-only listener expected by nginx.
 
+PM2 reports the process's resident memory, including the Node.js runtime and
+loaded Next.js and Clerk code. A value around 250 MB by itself does not indicate
+a leak. Compare memory after startup and after similar traffic over time; avoid
+setting `max-old-space-size` below the memory needed for catalog imports.
+
 ## 6. nginx + TLS
 
 ```bash
@@ -87,6 +92,15 @@ sudo nginx -t
 sudo systemctl reload nginx
 sudo certbot --nginx -d yamumon.com -d www.yamumon.com
 ```
+
+The nginx configuration serves versioned `/_next/static/` assets directly with
+long-lived caching and compression. Apply updated nginx settings with:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Publishing a release only reloads PM2.
 
 ## Backup
 

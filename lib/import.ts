@@ -1,5 +1,4 @@
 import Papa from "papaparse";
-import * as XLSX from "xlsx";
 import { validateNameInput } from "@/lib/name-input";
 import type { ColumnKey, ColumnMap, NameInput } from "@/lib/types";
 import { formatVariantCell } from "@/lib/variants";
@@ -31,7 +30,7 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   "contributed by": "credit",
 };
 
-export function parseSpreadsheet(buffer: Buffer, filename: string) {
+export async function parseSpreadsheet(buffer: Buffer, filename: string) {
   const lower = filename.toLowerCase();
   if (lower.endsWith(".csv") || lower.endsWith(".txt")) {
     return parseCsv(buffer.toString("utf8"));
@@ -52,7 +51,8 @@ function parseCsv(text: string) {
   return tableFromRows(parsed.data);
 }
 
-function parseXlsx(buffer: Buffer) {
+async function parseXlsx(buffer: Buffer) {
+  const XLSX = await import("xlsx");
   const workbook = XLSX.read(buffer, {
     type: "buffer",
     sheetRows: MAX_IMPORT_ROWS + 2,
